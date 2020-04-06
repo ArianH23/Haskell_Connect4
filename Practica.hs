@@ -28,25 +28,63 @@ main = do
 
 
 ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
-ponerFicha (f:fs) pos player 
-    | f !! (pos - 1) == "_" = (replaceB f True pos) : fs
-    | f !! (pos - 1) == "X" || f !! (pos -1) == "O" = f : (ponerFicha fs pos True)
+ponerFicha (f:fs) columnaE isPlayer 
+    | f !! (columnaE - 1) == "_" = (replaceB f columnaE isPlayer) : fs
+    | f !! (columnaE - 1) == "X" || f !! (columnaE -1) == "O" = f : (ponerFicha fs columnaE isPlayer)
     | otherwise = [f]
 
 
-replaceB (f:fs) player pos
-    | pos == 1 = "X" : fs
-    | otherwise = f : replaceB fs player (pos-1)
+replaceB :: [[Char]] -> Int -> Bool -> [[Char]]
+replaceB (f:fs)  columnaE isPlayer
+    | columnaE == 1 = 
+                if isPlayer then
+                    "O" : fs
+                else
+                    "X" : fs
+    | otherwise = f : replaceB fs (columnaE - 1) isPlayer
 
 
-play b t  = do 
-    if t then
-        do 
-        putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show (length  (head b)))
-        pos <- getLine
+play board t  = do 
+    -- if t then
+    --     do 
+        let columnas = (length (head board))
+        putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show columnas)
+        columnaE <- getLine
         -- print (head b)
-        let nboard = ponerFicha b (read pos :: Int) True
+        let nboard = ponerFicha board (read columnaE :: Int) t
         muestraBoard nboard
-        play nboard True
-    else
-        return()
+        putStrLn "\n"
+        
+        if checkHorizontal nboard t then
+            do
+            putStrLn "Has ganado!"
+            return()
+        else
+            play nboard (not t)
+    -- else
+        -- return()
+
+
+checkHorizontal board isPlayer = foldl (||) (False) (map (checkHorizontal' isPlayer 0) board)
+
+checkHorizontal' :: Bool -> Int -> [[Char]] -> Bool
+checkHorizontal' isPlayer fichasSeguidas l@(f:fs) 
+    |fichasSeguidas == 4 = True
+    |null fs = False
+    |f == "_" = checkHorizontal' isPlayer 0 fs
+    -- |f == "O" = True
+    -- |f == "_" = checkHorizontal' isPlayer 0 fs
+    
+    |isPlayer == True = 
+        if f == "O" then
+            checkHorizontal' isPlayer (fichasSeguidas+1) fs
+        else
+            checkHorizontal' isPlayer 0 fs
+            
+    |(not isPlayer) = 
+        if f == "X" then    
+            checkHorizontal' isPlayer (fichasSeguidas+1) fs
+        else
+            checkHorizontal' isPlayer 0 fs
+        
+    |otherwise = False
