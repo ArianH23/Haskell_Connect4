@@ -2,7 +2,8 @@
 createBoard n m = splitEvery y (take (x * y) rows)
     where x = read n :: Int
           y = read m :: Int
-rows = ['_'] : rows
+
+rows = "-" ++ rows
 
 
 -- splitEvery :: Int -> [[Char]] -> [[[Char]]]
@@ -27,26 +28,28 @@ main = do
     play b True
 
 
-ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
+-- ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
 ponerFicha (f:fs) columnaE isPlayer 
-    | f !! (columnaE - 1) == "_" = (replaceB f columnaE isPlayer) : fs
-    | f !! (columnaE - 1) == "X" || f !! (columnaE -1) == "O" = f : (ponerFicha fs columnaE isPlayer)
-    | otherwise = [f]
+    | f !! (columnaE - 1) == '-' = (replaceB f columnaE isPlayer) : fs
+    | f !! (columnaE - 1) == 'X' || f !! (columnaE -1) == 'O' = f : (ponerFicha fs columnaE isPlayer)
+    -- | otherwise = f
 
 
-replaceB :: [[Char]] -> Int -> Bool -> [[Char]]
+-- replaceB :: [[Char]] -> Int -> Bool -> [[Char]]
 replaceB (f:fs)  columnaE isPlayer
     | columnaE == 1 = 
                 if isPlayer then
-                    "O" : fs
+                    'O' : fs
                 else
-                    "X" : fs
+                    'X' : fs
     | otherwise = f : replaceB fs (columnaE - 1) isPlayer
 
 
 play board t  = do 
-    -- if t then
-    --     do 
+    
+        return()
+    -- -- if t then
+    -- --     do 
         let columnas = (length (head board))
         putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show columnas)
         columnaE <- getLine
@@ -67,22 +70,26 @@ play board t  = do
 
 checkHorizontal board isPlayer = foldl (||) (False) (map (checkHorizontal' isPlayer 0) board)
 
-checkHorizontal' :: Bool -> Int -> [[Char]] -> Bool
-checkHorizontal' isPlayer fichasSeguidas l@(f:fs) 
-    |fichasSeguidas == 4 = True
-    |null fs = False
-    |f == "_" = checkHorizontal' isPlayer 0 fs
+-- checkHorizontal' :: Bool -> Int -> [[Char]] -> Bool
+checkHorizontal' isPlayer 4 _ = True
+
+checkHorizontal' isPlayer fichasSeguidas [] = False
+
+checkHorizontal' isPlayer fichasSeguidas (f:fs) 
+    -- |fichasSeguidas == 4 = True
+    -- |l == [] = False
+    |f == '-' = checkHorizontal' isPlayer 0 fs
     -- |f == "O" = True
     -- |f == "_" = checkHorizontal' isPlayer 0 fs
     
     |isPlayer == True = 
-        if f == "O" then
+        if f == 'O' then
             checkHorizontal' isPlayer (fichasSeguidas+1) fs
         else
             checkHorizontal' isPlayer 0 fs
             
     |(not isPlayer) = 
-        if f == "X" then    
+        if f == 'X' then    
             checkHorizontal' isPlayer (fichasSeguidas+1) fs
         else
             checkHorizontal' isPlayer 0 fs
