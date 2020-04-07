@@ -55,15 +55,21 @@ play board t  = do
         muestraBoard nboard
         putStrLn "\n"
         
-        if checkHorizontal nboard t || checkVertical nboard t then
+        if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
             do
             putStrLn "Has ganado!"
             return()
-        else
+        else            
             play nboard (not t)
     -- else
         -- return()
 
+checkDiagonals board isPlayer = checkHorizontal (diagonals board)  isPlayer || checkHorizontal (diagonals (map reverse board)) isPlayer
+
+diagonals []       = []
+diagonals ([]:xs) = xs
+diagonals x      = zipWith (++) (map ((:[]) . head) x ++ repeat [])
+                                    ([]:(diagonals (map tail x)))
 
 transpose ([]:_) = []
 transpose x = (map head x) : transpose (map tail x)
@@ -71,21 +77,21 @@ transpose x = (map head x) : transpose (map tail x)
 checkVertical board isPlayer = checkHorizontal (transpose board) isPlayer
 
 checkHorizontal :: [[[Char]]] -> Bool -> Bool
-checkHorizontal board isPlayer = foldl (||) (False) (map (checkHorizontal' isPlayer 0) board)
+checkHorizontal board isPlayer = foldl (||) (False) (map (confirmWin isPlayer 0) board)
 
-checkHorizontal' :: Bool -> Int -> [[Char]] -> Bool
-checkHorizontal' isPlayer 4 _ = True
-checkHorizontal' isPlayer fichasSeguidas [] = False
-checkHorizontal' isPlayer fichasSeguidas (f:fs) 
-    |f == "_" = checkHorizontal' isPlayer 0 fs
+confirmWin :: Bool -> Int -> [[Char]] -> Bool
+confirmWin isPlayer 4 _ = True
+confirmWin isPlayer fichasSeguidas [] = False
+confirmWin isPlayer fichasSeguidas (f:fs) 
+    |f == "_" = confirmWin isPlayer 0 fs
     |isPlayer == True = 
         if f == "O" then
-            checkHorizontal' isPlayer (fichasSeguidas+1) fs
+            confirmWin isPlayer (fichasSeguidas+1) fs
         else
-            checkHorizontal' isPlayer 0 fs
+            confirmWin isPlayer 0 fs
             
     |(not isPlayer) = 
         if f == "X" then    
-            checkHorizontal' isPlayer (fichasSeguidas+1) fs
+            confirmWin isPlayer (fichasSeguidas+1) fs
         else
-            checkHorizontal' isPlayer 0 fs
+            confirmWin isPlayer 0 fs
