@@ -110,6 +110,24 @@ play board t estrategia = do
 -- validPositions :: [[[Char]]] -> [Int]
 validPositions board = posOfTrue (map (any ("_"==)) board) 0
 
+maximasOcurrencias [] _ count = [count]
+maximasOcurrencias (f:fs) isPlayer count 
+    |isPlayer = 
+        if f == "O" then
+            maximasOcurrencias fs isPlayer (count+1)
+        else 
+            if count>0 then
+                [count] ++ maximasOcurrencias fs isPlayer 0
+            else
+                maximasOcurrencias fs isPlayer 0
+    |not isPlayer =
+        if f == "X" then
+            maximasOcurrencias fs isPlayer (count+1)
+        else 
+            if count>0 then
+                [count] ++ maximasOcurrencias fs isPlayer 0
+            else
+                maximasOcurrencias fs isPlayer 0
 
 posOfTrue [] _ = []
 posOfTrue (x:xs) y
