@@ -55,7 +55,7 @@ play board t  = do
         muestraBoard nboard
         putStrLn "\n"
         
-        if checkHorizontal nboard t then
+        if checkHorizontal nboard t || checkVertical nboard t then
             do
             putStrLn "Has ganado!"
             return()
@@ -63,6 +63,12 @@ play board t  = do
             play nboard (not t)
     -- else
         -- return()
+
+
+transpose ([]:_) = []
+transpose x = (map head x) : transpose (map tail x)
+
+checkVertical board isPlayer = checkHorizontal (transpose board) isPlayer
 
 checkHorizontal :: [[[Char]]] -> Bool -> Bool
 checkHorizontal board isPlayer = foldl (||) (False) (map (checkHorizontal' isPlayer 0) board)
