@@ -107,11 +107,31 @@ play board t estrategia = do
             else            
                 play nboard (not t) estrategia
     
-        else 
-            return()
+        else if estrategia == 2 then 
+            do
+            let validPos = validPositions (transpose board)
+            let possibleBoards = boardsPosibles board validPos False
+            let bestValues = map maximum (valoresMaximos possibleBoards)
+            let posOfMax = maxPos bestValues 0 0 0
+            let nboard = ponerFicha board (validPos !! posOfMax) t
+            muestraBoard nboard
+            
+            if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
+                do
+                putStrLn "Ha ganado el bot!"
+                return()
+            else            
+                play nboard (not t) estrategia
 
+        else
+            return()
        
         return()
+
+maxPos [] pos _ _ = pos
+maxPos (a:as) pos count max 
+    |a > max = maxPos as (count) (count+1) a
+    |otherwise = maxPos as pos (count+1) max 
 
 -- validPositions :: [[[Char]]] -> [Int]
 validPositions board = posOfTrue (map (any ("_"==)) board) 0
