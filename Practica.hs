@@ -62,7 +62,7 @@ play board t estrategia = do
     -- print (board)
     -- print (diagonals board)
     -- print (diagonals (reverse board))
-    print ((valoresMaximos([transpose board])))
+    -- print ((valoresMaximos([transpose board])))
 
     if t then
         do 
@@ -74,7 +74,7 @@ play board t estrategia = do
 
         if not (any ((read columnaE :: Int)==) validPos) then
             do
-            putStrLn("Posición invalida")
+            putStrLn("Posición inválida")
             play board t estrategia
         
         else
@@ -109,11 +109,15 @@ play board t estrategia = do
     
         else if estrategia == 2 then 
             do
+            -- print (map reverse (transpose board))
             let validPos = validPositions (transpose board)
+            -- print validPos
+            print (posiblesColumnas board validPos False)
+            -- muestraBoard (ponerFicha board 1 False)
             let possibleBoards = boardsPosibles board validPos False
             let bestValues = map maximum (valoresMaximos possibleBoards)
             let posOfMax = maxPos (maximum bestValues) 0 bestValues
-            randPos <- randInt 0 ((length posOfMax) -1)
+            randPos <- randInt 0 ((length posOfMax) - 1)
             print posOfMax
             let nboard = ponerFicha board (validPos !! (posOfMax !! randPos) ) t
             muestraBoard nboard
@@ -130,6 +134,10 @@ play board t estrategia = do
        
         return()
 
+posiblesColumnas _ [] _ = []
+posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha board p isPlayer))) !! p)) : posiblesColumnas board ps isPlayer
+
+    
 maxPos _  _ []  = []
 maxPos max pos (a:as)
     |a == max = [pos] ++ maxPos max (pos+1) as
