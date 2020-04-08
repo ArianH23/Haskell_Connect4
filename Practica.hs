@@ -113,17 +113,30 @@ play board t estrategia = do
             let validPos = validPositions (transpose board)
             -- print validPos
             let posColumnas = (posiblesColumnas board validPos False)
-            let consecutivosVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
-            print (posiblesHorizontales board validPos False)
+            let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
+            let posHorizontales = (posiblesHorizontales board validPos False)
+            let consecHorizontales = consecutivosHorizontales posHorizontales validPos
+            print posHorizontales
+            let maxGlobal = maximum (consecVerticales ++ consecHorizontales)
+            let xd = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales])
+            let xd2 = uneListas xd
+            print (maxGlobal)
+            print xd
+            print xd2
+            -- print (consecVerticales)
+            -- print (consecHorizontales)
+            -- print ([consecVerticales] ++ [consecHorizontales])
+
             -- muestraBoard (ponerFicha board 1 False)
-            let possibleBoards = boardsPosibles board validPos False
-            let bestValues = map maximum (valoresMaximos possibleBoards)
-            let posOfMax = maxPos (maximum bestValues) 0 bestValues
-            randPos <- randInt 0 ((length posOfMax) - 1)
-            print posOfMax
-            let nboard = ponerFicha board (validPos !! (posOfMax !! randPos) ) t
+            -- let possibleBoards = boardsPosibles board validPos False
+            -- let bestValues = map maximum (valoresMaximos possibleBoards)
+            -- let posOfMax = maxPos (maximum bestValues) 0 bestValues
+            randPos <- randInt 0 ((length xd2) - 1)
+            -- print posOfMax
+            let nboard = ponerFicha board (validPos !! (xd2 !! randPos) ) t
             muestraBoard nboard
-            
+            putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((xd2 !! randPos) + 1) ))
+
             if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
                 do
                 putStrLn "Ha ganado el bot!"
@@ -136,10 +149,22 @@ play board t estrategia = do
        
         return()
 
+uneListas (x:[]) = x
+uneListas (x:xs) = x ++ uneListas xs
+
+analizaHorizontal n [] = n
+analizaHorizontal n (f:fs)
+    |f == "X" = analizaHorizontal (n+1) fs
+    |otherwise = n
+
+consecutivosHorizontales [] _ = []
+consecutivosHorizontales (f:fs) (p:ps) = analizaHorizontal 0 (drop (p) f) + analizaHorizontal 0 (drop ((length f) - p) (reverse f))
+                                        : consecutivosHorizontales fs ps
+
 posiblesColumnas _ [] _ = []
 posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha board p isPlayer))) !! p)) : posiblesColumnas board ps isPlayer
 
-posiblesHorizontales _ [] _ = []
+posiblesHorizontales     _ [] _ = []
 posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalVacia p (ponerFicha board p isPlayer)) : posiblesHorizontales board ps isPlayer
 
 cogerUltimaHorizontalVacia _ (f:[]) = f
