@@ -112,7 +112,9 @@ play board t estrategia = do
             -- print (map reverse (transpose board))
             let validPos = validPositions (transpose board)
             -- print validPos
-            print (posiblesColumnas board validPos False)
+            let posColumnas = (posiblesColumnas board validPos False)
+            let consecutivosVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
+            print (posiblesHorizontales board validPos False)
             -- muestraBoard (ponerFicha board 1 False)
             let possibleBoards = boardsPosibles board validPos False
             let bestValues = map maximum (valoresMaximos possibleBoards)
@@ -137,7 +139,14 @@ play board t estrategia = do
 posiblesColumnas _ [] _ = []
 posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha board p isPlayer))) !! p)) : posiblesColumnas board ps isPlayer
 
-    
+posiblesHorizontales _ [] _ = []
+posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalVacia p (ponerFicha board p isPlayer)) : posiblesHorizontales board ps isPlayer
+
+cogerUltimaHorizontalVacia _ (f:[]) = f
+cogerUltimaHorizontalVacia pos (f:fs) 
+    |(head fs) !! pos == "_" = f
+    |otherwise = cogerUltimaHorizontalVacia pos fs
+
 maxPos _  _ []  = []
 maxPos max pos (a:as)
     |a == max = [pos] ++ maxPos max (pos+1) as
