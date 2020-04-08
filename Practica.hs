@@ -112,8 +112,10 @@ play board t estrategia = do
             let validPos = validPositions (transpose board)
             let possibleBoards = boardsPosibles board validPos False
             let bestValues = map maximum (valoresMaximos possibleBoards)
-            let posOfMax = maxPos bestValues 0 0 0
-            let nboard = ponerFicha board (validPos !! posOfMax) t
+            let posOfMax = maxPos (maximum bestValues) 0 bestValues
+            randPos <- randInt 0 ((length posOfMax) -1)
+            print posOfMax
+            let nboard = ponerFicha board (validPos !! (posOfMax !! randPos) ) t
             muestraBoard nboard
             
             if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
@@ -128,10 +130,10 @@ play board t estrategia = do
        
         return()
 
-maxPos [] pos _ _ = pos
-maxPos (a:as) pos count max 
-    |a > max = maxPos as (count) (count+1) a
-    |otherwise = maxPos as pos (count+1) max 
+maxPos _  _ []  = []
+maxPos max pos (a:as)
+    |a == max = [pos] ++ maxPos max (pos+1) as
+    |otherwise = maxPos max (pos + 1) as
 
 -- validPositions :: [[[Char]]] -> [Int]
 validPositions board = posOfTrue (map (any ("_"==)) board) 0
