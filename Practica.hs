@@ -58,6 +58,12 @@ replaceB (f:fs)  columnaE isPlayer
 
 
 play board t estrategia = do 
+    -- print (transpose board)
+    -- print (board)
+    -- print (diagonals board)
+    -- print (diagonals (reverse board))
+    print ((valoresMaximos([transpose board])))
+
     if t then
         do 
         let columnas = (length (head board))
@@ -110,24 +116,37 @@ play board t estrategia = do
 -- validPositions :: [[[Char]]] -> [Int]
 validPositions board = posOfTrue (map (any ("_"==)) board) 0
 
-maximasOcurrencias [] _ count = [count]
-maximasOcurrencias (f:fs) isPlayer count 
+maximasOcurrencias  _ _ max [] = max
+maximasOcurrencias isPlayer count max (f:fs)
     |isPlayer = 
         if f == "O" then
-            maximasOcurrencias fs isPlayer (count+1)
+            if max < (count + 1) then
+                maximasOcurrencias isPlayer (count+1) (max+1) fs
+            else 
+                maximasOcurrencias isPlayer (count+1) max fs
+
         else 
-            if count>0 then
-                [count] ++ maximasOcurrencias fs isPlayer 0
-            else
-                maximasOcurrencias fs isPlayer 0
-    |not isPlayer =
+            maximasOcurrencias isPlayer 0 max fs
+            
+    |not isPlayer = 
         if f == "X" then
-            maximasOcurrencias fs isPlayer (count+1)
+            if max < (count + 1) then
+                maximasOcurrencias isPlayer (count+1) (max+1) fs
+            else 
+                maximasOcurrencias isPlayer (count+1) max fs
+
         else 
-            if count>0 then
-                [count] ++ maximasOcurrencias fs isPlayer 0
-            else
-                maximasOcurrencias fs isPlayer 0
+            maximasOcurrencias isPlayer 0 max fs
+
+-- valoresMaximos :: [[[Char]]] -> [[Int]]
+valoresMaximos [] = []
+valoresMaximos (b:bs) = (map (maximasOcurrencias False 0 0) b ++ map (maximasOcurrencias False 0 0) (transpose b)
+                        ++ map (maximasOcurrencias False 0 0) (diagonals (transpose b))
+                        ++ map (maximasOcurrencias False 0 0) (diagonals (map reverse (transpose b))) )
+                        : valoresMaximos bs
+
+boardsPosibles _ [] _ = []
+boardsPosibles board (p:ps) isPlayer = (ponerFicha board p isPlayer) : boardsPosibles board ps isPlayer
 
 posOfTrue [] _ = []
 posOfTrue (x:xs) y
