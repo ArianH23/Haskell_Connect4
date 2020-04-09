@@ -37,7 +37,7 @@ main = do
     muestraBoard b
     putStrLn "Que estrategia quieres que el bot tenga?: 1.Random 2.Greedy 3.Smart"
     e <- getLine
-    play b True (read e::Int)
+    play b False (read e::Int)
 
 
 ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
@@ -74,7 +74,7 @@ play board t estrategia = do
 
         if not (any ((read columnaE :: Int)==) validPos) then
             do
-            putStrLn("Posición inválida")
+            putStrLn("Posición inválida\n")
             play board t estrategia
         
         else
@@ -85,7 +85,7 @@ play board t estrategia = do
             
             if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
                 do
-                putStrLn "Has ganado tú!"
+                putStrLn "Has ganado tú!\n"
                 return()
             else            
                 play nboard (not t) estrategia
@@ -96,13 +96,13 @@ play board t estrategia = do
             let validPos = validPositions (transpose board)
             posrandom <- randInt 0 ((length validPos) - 1)
             let posicionNuevaFicha = validPos !! posrandom
-            putStrLn ("El bot ha colocado ficha en la posicion " ++ (show (posicionNuevaFicha+1) ))
+            putStrLn ("El bot ha colocado ficha en la posicion " ++ (show (posicionNuevaFicha+1) )++ "\n")
             let nboard = ponerFicha board posicionNuevaFicha t
             muestraBoard nboard
             
             if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
                 do
-                putStrLn "Ha ganado el bot!"
+                putStrLn "Ha ganado el bot!\n"
                 return()
             else            
                 play nboard (not t) estrategia
@@ -116,13 +116,28 @@ play board t estrategia = do
             let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
             let posHorizontales = (posiblesHorizontales board validPos False)
             let consecHorizontales = consecutivosHorizontales posHorizontales validPos
+
+            let posDiagonales1 = posiblesDiagonales board validPos False
+            let diag1 = map fst posDiagonales1
+            let positions1 = map snd posDiagonales1
+            let consecDiagonales1 = (consecutivosHorizontales diag1 positions1)
+
+            let posDiagonales2 = posiblesDiagonales board validPos True
+            let diag2 = map fst posDiagonales2
+            let positions2 = map snd posDiagonales2
+            let consecDiagonales2 = (consecutivosHorizontales diag2 positions2)
+
+            -- print posDiagonales2
+            -- print consecDiagonales2
+            -- print (posiblesDiagonales board validPos)
+            -- print consecDiagonales1
             -- print posHorizontales
-            let maxGlobal = maximum (consecVerticales ++ consecHorizontales)
-            let xd = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales])
-            let xd2 = uneListas xd
+            let maxGlobal = maximum (consecVerticales ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
+            let xd = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
+            let mejoresPosiciones = uneListas xd
             -- print (maxGlobal)
             -- print xd
-            -- print xd2
+            -- print mejoresPosiciones
             -- print (consecVerticales)
             -- print (consecHorizontales)
             -- print ([consecVerticales] ++ [consecHorizontales])
@@ -136,18 +151,17 @@ play board t estrategia = do
             -- print (diagonals (ponerFicha board 0 False))
             -- print (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False)))
             -- print (posOfFalse (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False))) 0)
-            let posDiagonales = posiblesDiagonales board validPos
-            print (posiblesDiagonales board validPos)
+            
 
-            randPos <- randInt 0 ((length xd2) - 1)
+            randPos <- randInt 0 ((length mejoresPosiciones) - 1)
             -- print posOfMax
-            let nboard = ponerFicha board (validPos !! (xd2 !! randPos) ) t
+            let nboard = ponerFicha board (validPos !! (mejoresPosiciones !! randPos) ) t
             muestraBoard nboard
-            putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((xd2 !! randPos) + 1) ))
+            putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((mejoresPosiciones !! randPos) + 1) ) ++ "\n")
 
             if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
                 do
-                putStrLn "Ha ganado el bot!"
+                putStrLn "Ha ganado el bot!\n"
                 return()
             else            
                 play nboard (not t) estrategia
@@ -166,8 +180,10 @@ diagonalDiferente board1 board2 = ((diagonals board2) !! x, posDiferencia ((diag
     where x = (posOfFalse (zipWith (==) (diagonals board1) (diagonals board2)) 0)
 
 
-posiblesDiagonales _ [] = []
-posiblesDiagonales board (p:ps) = (diagonalDiferente board (ponerFicha board p False)) : posiblesDiagonales board ps
+posiblesDiagonales _ [] _ = []
+posiblesDiagonales board (p:ps) invertida 
+    |not invertida = (diagonalDiferente board (ponerFicha board p False)) : posiblesDiagonales board ps invertida
+    |otherwise = (diagonalDiferente (map reverse board) (map reverse (ponerFicha board p False))) : posiblesDiagonales board ps invertida
 
 posOfFalse [] pos = pos
 posOfFalse (f:fs) pos
