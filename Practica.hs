@@ -116,13 +116,13 @@ play board t estrategia = do
             let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
             let posHorizontales = (posiblesHorizontales board validPos False)
             let consecHorizontales = consecutivosHorizontales posHorizontales validPos
-            print posHorizontales
+            -- print posHorizontales
             let maxGlobal = maximum (consecVerticales ++ consecHorizontales)
             let xd = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales])
             let xd2 = uneListas xd
-            print (maxGlobal)
-            print xd
-            print xd2
+            -- print (maxGlobal)
+            -- print xd
+            -- print xd2
             -- print (consecVerticales)
             -- print (consecHorizontales)
             -- print ([consecVerticales] ++ [consecHorizontales])
@@ -131,6 +131,14 @@ play board t estrategia = do
             -- let possibleBoards = boardsPosibles board validPos False
             -- let bestValues = map maximum (valoresMaximos possibleBoards)
             -- let posOfMax = maxPos (maximum bestValues) 0 bestValues
+
+            -- print (diagonals board)
+            -- print (diagonals (ponerFicha board 0 False))
+            -- print (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False)))
+            -- print (posOfFalse (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False))) 0)
+            let posDiagonales = posiblesDiagonales board validPos
+            print (posiblesDiagonales board validPos)
+
             randPos <- randInt 0 ((length xd2) - 1)
             -- print posOfMax
             let nboard = ponerFicha board (validPos !! (xd2 !! randPos) ) t
@@ -148,6 +156,23 @@ play board t estrategia = do
             return()
        
         return()
+
+        
+posDiferencia (b1:b1s) (b2:b2s) pos
+    |b1 /= b2 = pos
+    |otherwise = posDiferencia b1s b2s (pos+1)
+    
+diagonalDiferente board1 board2 = ((diagonals board2) !! x, posDiferencia ((diagonals board1) !! x) ((diagonals board2) !! x) 0)
+    where x = (posOfFalse (zipWith (==) (diagonals board1) (diagonals board2)) 0)
+
+
+posiblesDiagonales _ [] = []
+posiblesDiagonales board (p:ps) = (diagonalDiferente board (ponerFicha board p False)) : posiblesDiagonales board ps
+
+posOfFalse [] pos = pos
+posOfFalse (f:fs) pos
+    |not f = pos
+    |otherwise = posOfFalse fs (pos+1)
 
 uneListas (x:[]) = x
 uneListas (x:xs) = x ++ uneListas xs
