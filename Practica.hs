@@ -39,6 +39,7 @@ main = do
     e <- getLine
     play b False (read e::Int)
 
+ponerFicha' board isPlayer columnaE = ponerFicha board columnaE isPlayer
 
 ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
 ponerFicha (f:fs) columnaE isPlayer 
@@ -154,24 +155,54 @@ play board t estrategia = do
             
 
             randPos <- randInt 0 ((length mejoresPosiciones) - 1)
-            -- print posOfMax
-            let nboard = ponerFicha board (validPos !! (mejoresPosiciones !! randPos) ) t
-            muestraBoard nboard
-            putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((mejoresPosiciones !! randPos) + 1) ) ++ "\n")
+            -- print validPos
+            -- print mejoresPosiciones
+            -- print (elementosUnicos mejoresPosiciones)
+            let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
 
-            if checkHorizontal nboard t || checkVertical nboard t || checkDiagonals nboard t then
+            let sol = map (ponerFicha' board True) (mejoresPosicionesU)
+            -- print (sol)
+            let sol2 = map (comprobarWin True) sol
+            -- print sol2
+            if any (True==) sol2 then
+                do 
+                let posNextMove = posOfTrueMove sol2 0
+                let nextMove = mejoresPosicionesU !! posNextMove
+                let nboard = ponerFicha board nextMove t
+
+                muestraBoard nboard
+
+                putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((nextMove) + 1) ) ++ " :)\n")
+
+                if comprobarWin t nboard then
+                    do
+                    putStrLn "Ha ganado el bot!\n"
+                    return()
+                else            
+                    play nboard (not t) estrategia
+
+            else
                 do
-                putStrLn "Ha ganado el bot!\n"
-                return()
-            else            
-                play nboard (not t) estrategia
+                -- print posOfMax
+                let nboard = ponerFicha board (validPos !! (mejoresPosiciones !! randPos) ) t
+                muestraBoard nboard
+                putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((mejoresPosiciones !! randPos) + 1) ) ++ "\n")
+
+                if comprobarWin t nboard then
+                    do
+                    putStrLn "Ha ganado el bot!\n"
+                    return()
+                else            
+                    play nboard (not t) estrategia
 
         else
             return()
        
         return()
 
-        
+
+comprobarWin t board = checkHorizontal board t || checkVertical board t || checkDiagonals board t
+
 posDiferencia (b1:b1s) (b2:b2s) pos
     |b1 /= b2 = pos
     |otherwise = posDiferencia b1s b2s (pos+1)
@@ -185,6 +216,11 @@ posiblesDiagonales board (p:ps) invertida
     |not invertida = (diagonalDiferente board (ponerFicha board p False)) : posiblesDiagonales board ps invertida
     |otherwise = (diagonalDiferente (map reverse board) (map reverse (ponerFicha board p False))) : posiblesDiagonales board ps invertida
 
+posOfTrueMove [] pos = pos
+posOfTrueMove (f:fs) pos
+    |f = pos
+    |otherwise = posOfTrueMove fs (pos+1)
+
 posOfFalse [] pos = pos
 posOfFalse (f:fs) pos
     |not f = pos
@@ -192,6 +228,14 @@ posOfFalse (f:fs) pos
 
 uneListas (x:[]) = x
 uneListas (x:xs) = x ++ uneListas xs
+
+elementosUnicos xs = borrar $ sort xs
+  where
+    borrar []  = []
+    borrar [x] = [x]
+    borrar (x1:x2:xs)
+      | x1 == x2  = borrar (x1:xs)
+      | otherwise = x1 : borrar (x2:xs)
 
 analizaHorizontal n [] = n
 analizaHorizontal n (f:fs)
@@ -290,3 +334,12 @@ confirmWin isPlayer fichasSeguidas (f:fs)
             confirmWin isPlayer (fichasSeguidas+1) fs
         else
             confirmWin isPlayer 0 fs
+
+
+sort :: [Int] -> [Int]
+sort [] = []
+sort [x] = [x]
+sort (x:xs) = (sort menors) ++ [x] ++ (sort majors)
+    where 
+        menors = [y | y<-xs , y < x]
+        majors = [y | y<-xs , y >= x]
