@@ -10,9 +10,10 @@ randInt low high = do
 
 
 -- createBoard :: String -> String -> [[[Char]]]
-createBoard n m = splitEvery y (take (x * y) rows)
-    where x = read n :: Int
-          y = read m :: Int
+createBoard n m = splitEvery m (take (n * m) rows)
+    -- where x = read n :: Int
+    --       y = read m :: Int
+
 rows = ['_'] : rows
 
 
@@ -22,23 +23,66 @@ splitEvery n list = first : (splitEvery n rest)
   where
     (first,rest) = splitAt n list
 
+escogerEstrategia = do
+    putStrLn "Que estrategia quieres que el bot tenga?: 1.Random 2.Greedy 3.Smart"
+
+    e <- getLine
+    let num = (read e :: Int)
+    if (num <= 3) && (num >= 1) then
+        return (num)
+    else
+        do
+            putStrLn "Estrategia no valida, vuelve a escoger por favor.\n"
+            escogerEstrategia
+
 
 muestraBoard [] = return()
 muestraBoard (b:bs) = do 
     muestraBoard bs
     print b
 
-main = do 
+primerTurno = do
+    putStrLn "\nQuieres tener el primer movimiento (escribe 0) o el segundo (escribe 1)?"
+    putStrLn "Recuerda que el bot siempre sera las X y tu los O?"
+
+    t <- getLine
+    
+    let num = (read t :: Int)
+
+    if (num /= 0) && (num /= 1) then
+        do
+        putStrLn "Opción no valida, vuelve a escoger por favor."
+        primerTurno
+    else
+        if num == 0 then
+            return (True)
+        else
+            return(False)
+
+escogerDimensiones = do
     putStrLn "Elige el numero de filas del tablero"
     n <- getLine
     putStrLn "Elige el numero de columnas del tablero"
     m <- getLine
+    let x = (read n :: Int)
+    let y = (read m :: Int)
+    if (x < 4 && y < 4) || x <1 || y <1 then
+        do
+        putStrLn "Al menos uno de los dos valores tiene que ser mayor o igual que 4 y ambos positivos para que el juego tenga sentido."
+        putStrLn "Por favor, vuelve a introducir las dimensiones.\n"
+        escogerDimensiones
+    else 
+        return((x,y))
+
+main = do 
+    (n,m) <- escogerDimensiones
     let b = createBoard n m
     muestraBoard b
-    putStrLn "Que estrategia quieres que el bot tenga?: 1.Random 2.Greedy 3.Smart"
-    e <- getLine
-    play b False (read e::Int)
+    e <- escogerEstrategia
+    t <- primerTurno
+    play b t e
 
+    
 ponerFicha' board isPlayer columnaE = ponerFicha board columnaE isPlayer
 
 ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
