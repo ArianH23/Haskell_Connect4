@@ -42,19 +42,19 @@ muestraBoard (b:bs) = do
     print b
 
 primerTurno = do
-    putStrLn "\nQuieres tener el primer movimiento (escribe 0) o el segundo (escribe 1)?"
+    putStrLn "\nQuieres tener el primer movimiento (escribe 1) o el segundo (escribe 2)?"
     putStrLn "Recuerda que el bot siempre sera las X y tu los O?"
 
     t <- getLine
     
     let num = (read t :: Int)
 
-    if (num /= 0) && (num /= 1) then
+    if (num /= 1) && (num /= 2) then
         do
         putStrLn "Opción no valida, vuelve a escoger por favor."
         primerTurno
     else
-        if num == 0 then
+        if num == 1 then
             return (True)
         else
             return(False)
@@ -66,13 +66,13 @@ escogerDimensiones = do
     m <- getLine
     let x = (read n :: Int)
     let y = (read m :: Int)
-    if (x < 4 && y < 4) || x <1 || y <1 then
-        do
-        putStrLn "Al menos uno de los dos valores tiene que ser mayor o igual que 4 y ambos positivos para que el juego tenga sentido."
-        putStrLn "Por favor, vuelve a introducir las dimensiones.\n"
-        escogerDimensiones
-    else 
-        return((x,y))
+    -- if (x < 4 && y < 4) || x <1 || y <1 then
+    --     do
+    --     putStrLn "Al menos uno de los dos valores tiene que ser mayor o igual que 4 y ambos positivos para que el juego tenga sentido."
+    --     putStrLn "Por favor, vuelve a introducir las dimensiones.\n"
+    --     escogerDimensiones
+    -- else 
+    return((x,y))
 
 main = do 
     (n,m) <- escogerDimensiones
@@ -87,7 +87,7 @@ main = do
     else if e == 2 then
         partida b t estrategia2
     else
-        partida b t estrategia2
+        partida b t estrategia3
 
 
     
@@ -109,12 +109,19 @@ replaceB (f:fs)  columnaE isPlayer
                     "X" : fs
     | otherwise = f : replaceB fs (columnaE - 1) isPlayer
 
+jugadaRealizada isPlayer pos
+    |isPlayer = putStrLn ("Has puesto ficha en la posicion " ++ (show (pos + 1)) ++ " ↖\n")
+    |otherwise = putStrLn ("El bot ha puesto ficha en la posicion " ++ (show (pos + 1)) ++ " ↖\n")
+
 -- partida :: [[[Char]]] -> Bool -> ([[[Char]]] -> Bool-> IO Int) -> IO Int
 partida board t estrategia = do
     posicionNuevaFicha <- estrategia board t
     let nboard = ponerFicha board posicionNuevaFicha t
     muestraBoard nboard
     putStrLn ""
+
+    jugadaRealizada t posicionNuevaFicha
+
     if comprobarWin t nboard then
         do
         ganador t
@@ -150,19 +157,8 @@ estrategia1 :: [[[Char]]] -> Bool -> IO Int
 estrategia1 board isPlayer = do
     if isPlayer then
         do
-        let columnas = (length (head board))
-        putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show columnas ++ "\n")
-        columnaE <- getLine
-        -- print (head b)
-        let validPos = map (+1) (validPositions (transpose board))
-    
-        if not (any ((read columnaE :: Int)==) validPos) then
-            do
-            putStrLn("Posición inválida\n")
-            turnoJugador board
-        
-        else
-            return ((read columnaE :: Int) -1)
+        x <- turnoJugador board
+        return (x)
     else
         do
         let validPos = validPositions (transpose board)
@@ -174,23 +170,79 @@ estrategia1 board isPlayer = do
         return(posrandom)
 
 
+estrategia3 :: [[[Char]]] -> Bool -> IO Int
+estrategia3 board isPlayer = do 
+        if isPlayer then
+            do
+            x <- turnoJugador board
+            return (x)
+        else
+            do
+            let validPos = validPositions (transpose board)
+
+            let posColumnas = (posiblesColumnas board validPos False)
+            let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
+            let posHorizontales = (posiblesHorizontales board validPos False)
+            let consecHorizontales = consecutivosHorizontales posHorizontales validPos
+
+            let posDiagonales1 = posiblesDiagonales board validPos False
+            let diag1 = map fst posDiagonales1
+            let positions1 = map snd posDiagonales1
+            let consecDiagonales1 = (consecutivosHorizontales diag1 positions1)
+
+            let posDiagonales2 = posiblesDiagonales board validPos True
+            let diag2 = map fst posDiagonales2
+            let positions2 = map snd posDiagonales2
+            let consecDiagonales2 = (consecutivosHorizontales diag2 positions2)
+
+            let maxGlobal = maximum (consecVerticales ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
+            let xd = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
+            let mejoresPosiciones = uneListas xd
+            -- print validPos
+            
+            -- print (diagonals board)
+
+            -- print posDiagonales1
+            -- print posDiagonales2
+
+            -- print posHorizontales
+
+            -- print xd
+            -- print mejoresPosiciones
+            -- print maxGlobal
+            -- printPos
+            if maxGlobal == 4 then
+                do  -- Comprueba si puedes jugar, en tal caso, se hace alguna de las posibles jugadas ganadoras
+                    randPos <- randInt 0 ((length mejoresPosiciones) - 1)
+                    return (mejoresPosiciones !! randPos)
+            
+            else
+
+                do  --Comprueba si el jugador puede ganar y bloquea esa jugada si es necesario
+                let posiblesMovimientosJugador = map (ponerFicha' board True) (validPos)
+                -- print (sol)
+                let jugadaGanadoraJugador = map (comprobarWin True) posiblesMovimientosJugador
+                -- print sol2
+                if any (True==) jugadaGanadoraJugador then
+                    do 
+                    let posNextMove = posOfTrueMove jugadaGanadoraJugador 0
+                    let movimientoBloqueador = validPos !! posNextMove
+                    return (movimientoBloqueador)
+                
+                else
+                    do
+                    let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
+
+                    return (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2)))
+
+
+
 estrategia2 :: [[[Char]]] -> Bool -> IO Int
 estrategia2 board isPlayer = do
         if isPlayer then
             do
-            let columnas = (length (head board))
-            putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show columnas ++ "\n")
-            columnaE <- getLine
-            -- print (head b)
-            let validPos = map (+1) (validPositions (transpose board))
-        
-            if not (any ((read columnaE :: Int)==) validPos) then
-                do
-                putStrLn("Posición inválida\n")
-                turnoJugador board
-            
-            else
-                return ((read columnaE :: Int) -1)
+            x <- turnoJugador board
+            return (x)
         else
             do
         -- print (map reverse (transpose board))
@@ -219,22 +271,26 @@ estrategia2 board isPlayer = do
         -- print (maxGlobal)
     
         -- print (posOfFalse (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False))) 0)
-        
+        print maxGlobal
+        print xd
+        print mejoresPosiciones
 
         randPos <- randInt 0 ((length mejoresPosiciones) - 1)
         -- print validPos
         -- print mejoresPosiciones
         -- print (elementosUnicos mejoresPosiciones)
         let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
-
-        let sol = map (ponerFicha' board True) (mejoresPosicionesU)
+        let bestOfbests = map (validPos !!) mejoresPosicionesU
+        let sol = map (ponerFicha' board True) (bestOfbests)
         -- print (sol)
         let sol2 = map (comprobarWin True) sol
         -- print sol2
         if any (True==) sol2 then
             do 
             let posNextMove = posOfTrueMove sol2 0
-            let nextMove = mejoresPosicionesU !! posNextMove
+            putStrLn "posnextmove"
+            print posNextMove
+            let nextMove = (bestOfbests !! posNextMove)
             -- let nboard = ponerFicha board nextMove t
 
             -- muestraBoard nboard
@@ -248,8 +304,13 @@ estrategia2 board isPlayer = do
             do
             -- print posOfMax
             -- putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((mejoresPosiciones !! randPos) + 1) ) ++ "\n")
-            return (mejoresPosiciones !! randPos)
+            putStrLn "venga dew"
+            return (validPos !! (mejoresPosiciones !! randPos))
 
+-- takeElementsOfLists _ [] = []
+-- takeElementsOfLists (f:fs) (x:xs)
+--     |x == 0 = [f] ++ takeElementsOfLists fs (map (-1) xs)
+--     |otherwise = takeElementsOfLists fs (map (-1) (x:xs))
 
 comprobarWin t board = checkHorizontal board t || checkVertical board t || checkDiagonals board t
 
@@ -307,6 +368,7 @@ cogerUltimaHorizontalVacia pos (f:fs)
     |(head fs) !! pos == "_" = f
     |otherwise = cogerUltimaHorizontalVacia pos fs
 
+maxPos :: Int -> Int -> [Int] -> [Int]
 maxPos _  _ []  = []
 maxPos max pos (a:as)
     |a == max = [pos] ++ maxPos max (pos+1) as
