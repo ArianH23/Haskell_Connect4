@@ -90,7 +90,8 @@ main = do
         partida b t estrategia3
 
 
-    
+ponerFichaZip isPlayer board columna = ponerFicha board columna isPlayer
+
 ponerFicha' board isPlayer columnaE = ponerFicha board columnaE isPlayer
 
 ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
@@ -277,17 +278,51 @@ estrategia3 board isPlayer = do
                         -- print ( "estoy en 3 h y devuelvo" ++show c)
                         return (c)
                     else
+                        --Si hay alguna columna por la que pueda ganar el bot si el jugador tira alli justo antes, el bot no tirara alli
+
+
                         do
-                        -- print "hola4"
-                        -- print horiJugador
-                        -- print consecHoriJugador
+                        let espaciosDobles = posOfTrue (columnas2Espacios board) 0
+                        -- print espaciosDobles
 
-                        -- print (puedeGanarEnOtraJugada True posiblesMovimientosJugador)
+                        let tableroSiJuegaBot = map (ponerFicha' board False) (espaciosDobles)
+                        let tableroSiJuegaPlayer = map (ponerFicha' board True) (espaciosDobles)
 
-                        let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
-                        -- print ( "estoy en predet h y devuelvo" ++show (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2))))
+                        let botPlayer = zipWith (ponerFichaZip True) tableroSiJuegaBot espaciosDobles
+                        let playerBot = zipWith (ponerFichaZip False) tableroSiJuegaPlayer espaciosDobles
 
-                        return (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2)))
+                        let evita1 = map (comprobarWin True) botPlayer
+                        let evita2 = map (comprobarWin False) playerBot
+                        
+                        let posicionesaEvitar = zipWith (||) evita1 evita2
+                        
+                        let movimientosCorrectos = (posOfFalseArray 0 posicionesaEvitar)
+
+                        if length movimientosCorrectos > 0 then
+                            do
+                            let movimientoCentricoCorrecto = espaciosDobles !! (movimientosCorrectos !! (((length movimientosCorrectos) - 1) `div` 2))
+                            return movimientoCentricoCorrecto
+                            -- print "hola4"
+                            -- print horiJugador
+                            -- print consecHoriJugador
+
+                            -- print (puedeGanarEnOtraJugada True posiblesMovimientosJugador)
+
+                        else
+                            do
+                            let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
+                            -- print ( "estoy en predet h y devuelvo" ++show (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2))))
+
+                            return (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2)))
+
+columnasEspacios num [] = num
+columnasEspacios num (b:bs)
+    |b == "_" = columnasEspacios (num + 1) bs
+    |otherwise = num
+
+
+
+columnas2Espacios board = map (>= 2) (map (columnasEspacios 0) (map reverse (transpose board))) 
 
 
 puedeGanarEnOtraJugada _ [] = []
@@ -363,8 +398,7 @@ estrategia2 board isPlayer = do
         if any (True==) sol2 then
             do 
             let posNextMove = posOfTrueMove sol2 0
-            putStrLn "posnextmove"
-            print posNextMove
+            
             let nextMove = (bestOfbests !! posNextMove)
             -- let nboard = ponerFicha board nextMove t
 
@@ -407,6 +441,12 @@ posOfTrueMove (f:fs) pos
     |f = pos
     |otherwise = posOfTrueMove fs (pos+1)
 
+posOfFalseArray pos [] = []
+posOfFalseArray pos (a:as)
+    |not a = [pos] ++ posOfFalseArray (pos+1) as
+    |otherwise = posOfFalseArray (pos+1) as
+
+-- posOfFalse :: [Bool] -> Int ->
 posOfFalse [] pos = pos
 posOfFalse (f:fs) pos
     |not f = pos
