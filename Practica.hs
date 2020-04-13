@@ -9,20 +9,22 @@ randInt low high = do
     return result
 
 
--- createBoard :: String -> String -> [[[Char]]]
+createBoard :: Int -> Int -> [[[Char]]]
 createBoard n m = splitEvery m (take (n * m) rows)
     -- where x = read n :: Int
     --       y = read m :: Int
 
+rows :: [[Char]]
 rows = ['_'] : rows
 
 
--- splitEvery :: Int -> [[Char]] -> [[[Char]]]
+splitEvery :: Int -> [[Char]] -> [[[Char]]]
 splitEvery _ [] = []
 splitEvery n list = first : (splitEvery n rest)
   where
     (first,rest) = splitAt n list
 
+escogerEstrategia :: IO Int
 escogerEstrategia = do
     putStrLn "Que estrategia quieres que el bot tenga?: 1.Random 2.Greedy 3.Smart"
 
@@ -35,12 +37,13 @@ escogerEstrategia = do
             putStrLn "Estrategia no valida, vuelve a escoger por favor.\n"
             escogerEstrategia
 
-
+muestraBoard :: [[[Char]]] -> IO ()
 muestraBoard [] = return()
 muestraBoard (b:bs) = do 
     muestraBoard bs
     print b
 
+primerTurno :: IO Bool
 primerTurno = do
     putStrLn "\nQuieres tener el primer movimiento (escribe 1) o el segundo (escribe 2)?"
     putStrLn "Recuerda que el bot siempre sera las X y tu los O?"
@@ -59,6 +62,7 @@ primerTurno = do
         else
             return(False)
 
+escogerDimensiones :: IO (Int, Int)
 escogerDimensiones = do
     putStrLn "Elige el numero de filas del tablero"
     n <- getLine
@@ -74,6 +78,7 @@ escogerDimensiones = do
     -- else 
     return((x,y))
 
+main :: IO ()
 main = do 
     (n,m) <- escogerDimensiones
     let b = createBoard n m
@@ -89,15 +94,10 @@ main = do
     else
         partida b t estrategia3
 
-
-ponerFichaZip isPlayer board columna = ponerFicha board columna isPlayer
-
-ponerFicha' board isPlayer columnaE = ponerFicha board columnaE isPlayer
-
-ponerFicha :: [[[Char]]] -> Int -> Bool -> [[[Char]]]
-ponerFicha (f:fs) columnaE isPlayer 
-    | f !! (columnaE) == "_" = (replaceB f columnaE isPlayer) : fs
-    | f !! (columnaE) == "X" || f !! (columnaE) == "O" = f : (ponerFicha fs columnaE isPlayer)
+ponerFicha :: Bool -> [[[Char]]] -> Int -> [[[Char]]]
+ponerFicha isPlayer (f:fs) columnaE
+    | f !! (columnaE) == "_" = (replaceB  f columnaE isPlayer) : fs
+    | f !! (columnaE) == "X" || f !! (columnaE) == "O" = f : (ponerFicha isPlayer fs columnaE )
     | otherwise = [f]
 
 
@@ -110,14 +110,15 @@ replaceB (f:fs)  columnaE isPlayer
                     "X" : fs
     | otherwise = f : replaceB fs (columnaE - 1) isPlayer
 
+jugadaRealizada :: Bool -> Int -> IO ()
 jugadaRealizada isPlayer pos
-    |isPlayer = putStrLn ("Has puesto ficha en la posicion " ++ (show (pos + 1)) ++ " ↖\n")
-    |otherwise = putStrLn ("El bot ha puesto ficha en la posicion " ++ (show (pos + 1)) ++ " ↖\n")
+    |isPlayer = putStrLn ("Has puesto ficha en la posición " ++ (show (pos + 1)) ++ " ↖\n")
+    |otherwise = putStrLn ("El bot ha puesto ficha en la posición " ++ (show (pos + 1)) ++ " ↖\n")
 
--- partida :: [[[Char]]] -> Bool -> ([[[Char]]] -> Bool-> IO Int) -> IO Int
+partida:: [[[Char]]] -> Bool -> ([[[Char]]] -> Bool -> IO Int) -> IO ()
 partida board t estrategia = do
     posicionNuevaFicha <- estrategia board t
-    let nboard = ponerFicha board posicionNuevaFicha t
+    let nboard = ponerFicha t board posicionNuevaFicha 
     muestraBoard nboard
     putStrLn ""
 
@@ -140,6 +141,7 @@ partida board t estrategia = do
 
 empate board = not (foldr (||) False (map (any ("_"==)) board))
 
+ganador :: Bool -> IO ()
 ganador t = do
     if t then
         putStrLn "Has ganado tú!"
@@ -203,7 +205,7 @@ estrategia3 board isPlayer = do
 
                 do  --Comprueba si el jugador puede ganar y bloquea esa jugada si es posible
                 -- print 1
-                let posiblesMovimientosJugador = map (ponerFicha' board True) (validPos) --- Boards posibles del jugador
+                let posiblesMovimientosJugador = map (ponerFicha True board ) (validPos) --- Boards posibles del jugador
                 -- print (sol)
                 -- print 2
                 let jugadaGanadoraJugador = map (comprobarWin True) posiblesMovimientosJugador
@@ -222,11 +224,11 @@ estrategia3 board isPlayer = do
                     let espaciosDobles = posOfTrue (columnas2Espacios board) 0
                     -- print espaciosDobles
 
-                    let tableroSiJuegaBot = map (ponerFicha' board False) (espaciosDobles)
-                    let tableroSiJuegaPlayer = map (ponerFicha' board True) (espaciosDobles)
+                    let tableroSiJuegaBot = map (ponerFicha False board ) (espaciosDobles)
+                    let tableroSiJuegaPlayer = map (ponerFicha True board ) (espaciosDobles)
 
-                    let botPlayer = zipWith (ponerFichaZip True) tableroSiJuegaBot espaciosDobles
-                    let playerBot = zipWith (ponerFichaZip False) tableroSiJuegaPlayer espaciosDobles
+                    let botPlayer = zipWith (ponerFicha True) tableroSiJuegaBot espaciosDobles
+                    let playerBot = zipWith (ponerFicha False) tableroSiJuegaPlayer espaciosDobles
 
                     let evita1 = map (comprobarWin True) botPlayer
                     let evita2 = map (comprobarWin False) playerBot
@@ -315,22 +317,24 @@ estrategia3 board isPlayer = do
 
                             return (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2)))
 
+columnasEspacios :: Int -> [[Char]] -> Int
 columnasEspacios num [] = num
 columnasEspacios num (b:bs)
     |b == "_" = columnasEspacios (num + 1) bs
     |otherwise = num
 
 
-
+columnas2Espacios :: [[[Char]]] -> [Bool]
 columnas2Espacios board = map (>= 2) (map (columnasEspacios 0) (map reverse (transpose board))) 
 
-
+puedeGanarEnOtraJugada :: Bool -> [[[[Char]]]] -> [Bool]
 puedeGanarEnOtraJugada _ [] = []
 puedeGanarEnOtraJugada isPlayer (b:bs)
     |isPlayer = 
-        [foldl (||) (False) (map (comprobarWin True) (map (ponerFicha' b True) (validPositions (transpose b))))] ++ puedeGanarEnOtraJugada isPlayer bs
+        [foldl (||) (False) (map (comprobarWin True) (map (ponerFicha True b ) (validPositions (transpose b))))] ++ puedeGanarEnOtraJugada isPlayer bs
     |otherwise = []
 
+rayaImparable :: Int -> Bool -> [[Char]] -> Int
 rayaImparable n _ [] = n 
 rayaImparable n isPlayer (f:fs)
     |isPlayer = 
@@ -343,6 +347,7 @@ rayaImparable n isPlayer (f:fs)
         else n
     |otherwise = n
 
+potencial3enRayaH :: Bool -> [[[Char]]] -> [Int] -> [Bool]
 potencial3enRayaH _ [] _ = []
 potencial3enRayaH isPlayer (f:fs) (p:ps) = (rayaImparable 0 isPlayer (drop (p) f) + rayaImparable 0 isPlayer (drop ((length f) - p) (reverse f)) >= 3)
                                         : potencial3enRayaH isPlayer fs ps
@@ -372,7 +377,7 @@ estrategia2 board isPlayer = do
         -- print (elementosUnicos mejoresPosiciones)
         let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
         let bestOfbests = map (validPos !!) mejoresPosicionesU
-        let sol = map (ponerFicha' board True) (bestOfbests)
+        let sol = map (ponerFicha True board ) (bestOfbests)
         -- print (sol)
         let sol2 = map (comprobarWin True) sol
         -- print sol2
@@ -401,7 +406,7 @@ estrategia2 board isPlayer = do
 -- takeElementsOfLists (f:fs) (x:xs)
 --     |x == 0 = [f] ++ takeElementsOfLists fs (map (-1) xs)
 --     |otherwise = takeElementsOfLists fs (map (-1) (x:xs))
-
+greedy :: [[[Char]]] -> [Int] -> IO ([Int], Int)
 greedy board validPos =
     do 
     -- let validPos = validPositions (transpose board)
@@ -429,21 +434,26 @@ greedy board validPos =
 
     return ((mejoresPosiciones, maxGlobal))
 
+comprobarWin :: Bool -> [[[Char]]] -> Bool
 comprobarWin t board = checkHorizontal board t || checkVertical board t || checkDiagonals board t
 
+posDiferencia :: [[Char]] -> [[Char]] -> Int -> Int
 posDiferencia (b1:b1s) (b2:b2s) pos
     |b1 /= b2 = pos
     |otherwise = posDiferencia b1s b2s (pos+1)
     
+diagonalDiferente :: [[[Char]]] -> [[[Char]]] -> ([[Char]], Int)
 diagonalDiferente board1 board2 = ((diagonals board2) !! x, posDiferencia ((diagonals board1) !! x) ((diagonals board2) !! x) 0)
     where x = (posOfFalse (zipWith (==) (diagonals board1) (diagonals board2)) 0)
 
-
+posiblesDiagonales :: [[[Char]]] -> [Int] -> Bool -> [([[Char]], Int)]
 posiblesDiagonales _ [] _ = []
 posiblesDiagonales board (p:ps) invertida 
-    |not invertida = (diagonalDiferente board (ponerFicha board p False)) : posiblesDiagonales board ps invertida
-    |otherwise = (diagonalDiferente (map reverse board) (map reverse (ponerFicha board p False))) : posiblesDiagonales board ps invertida
+    |not invertida = (diagonalDiferente board (ponerFicha False board p)) : posiblesDiagonales board ps invertida
+    |otherwise = (diagonalDiferente (map reverse board) (map reverse (ponerFicha False board p))) : posiblesDiagonales board ps invertida
 
+
+posOfTrueMove :: [Bool] -> Int -> Int
 posOfTrueMove [] pos = pos
 posOfTrueMove (f:fs) pos
     |f = pos
@@ -454,15 +464,17 @@ posOfFalseArray pos (a:as)
     |not a = [pos] ++ posOfFalseArray (pos+1) as
     |otherwise = posOfFalseArray (pos+1) as
 
--- posOfFalse :: [Bool] -> Int ->
+posOfFalse :: [Bool] -> Int -> Int
 posOfFalse [] pos = pos
 posOfFalse (f:fs) pos
     |not f = pos
     |otherwise = posOfFalse fs (pos+1)
 
+uneListas :: [[Int]] -> [Int]
 uneListas (x:[]) = x
 uneListas (x:xs) = x ++ uneListas xs
 
+elementosUnicos :: [Int] -> [Int]
 elementosUnicos xs = borrar $ sort xs
   where
     borrar []  = []
@@ -471,6 +483,7 @@ elementosUnicos xs = borrar $ sort xs
       | x1 == x2  = borrar (x1:xs)
       | otherwise = x1 : borrar (x2:xs)
 
+analizaHorizontal :: Int -> Bool -> [[Char]] -> Int
 analizaHorizontal n _ [] = n
 analizaHorizontal n isPlayer (f:fs)
     |isPlayer = 
@@ -483,16 +496,20 @@ analizaHorizontal n isPlayer (f:fs)
         else n
     |otherwise = n
 
+consecutivosHorizontales  :: Bool -> [[[Char]]] -> [Int] -> [Int]
 consecutivosHorizontales _ [] _ = []
 consecutivosHorizontales isPlayer (f:fs) (p:ps) = analizaHorizontal 0 isPlayer (drop (p) f) + analizaHorizontal 0 isPlayer (drop ((length f) - p) (reverse f))
                                         : consecutivosHorizontales isPlayer fs ps
 
+posiblesColumnas :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
 posiblesColumnas _ [] _ = []
-posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha board p isPlayer))) !! p)) : posiblesColumnas board ps isPlayer
+posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha isPlayer board p ))) !! p)) : posiblesColumnas board ps isPlayer
 
+posiblesHorizontales :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
 posiblesHorizontales     _ [] _ = []
-posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalVacia p (ponerFicha board p isPlayer)) : posiblesHorizontales board ps isPlayer
+posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalVacia p (ponerFicha isPlayer board p )) : posiblesHorizontales board ps isPlayer
 
+cogerUltimaHorizontalVacia :: Int -> [[[Char]]] -> [[Char]]
 cogerUltimaHorizontalVacia _ (f:[]) = f
 cogerUltimaHorizontalVacia pos (f:fs) 
     |(head fs) !! pos == "_" = f
@@ -504,57 +521,61 @@ maxPos max pos (a:as)
     |a == max = [pos] ++ maxPos max (pos+1) as
     |otherwise = maxPos max (pos + 1) as
 
--- validPositions :: [[[Char]]] -> [Int]
+validPositions :: [[[Char]]] -> [Int]
 validPositions board = posOfTrue (map (any ("_"==)) board) 0
 
-maximasOcurrencias  _ _ max [] = max
-maximasOcurrencias isPlayer count max (f:fs)
-    |isPlayer = 
-        if f == "O" then
-            if max < (count + 1) then
-                maximasOcurrencias isPlayer (count+1) (max+1) fs
-            else 
-                maximasOcurrencias isPlayer (count+1) max fs
+-- maximasOcurrencias  _ _ max [] = max
+-- maximasOcurrencias isPlayer count max (f:fs)
+--     |isPlayer = 
+--         if f == "O" then
+--             if max < (count + 1) then
+--                 maximasOcurrencias isPlayer (count+1) (max+1) fs
+--             else 
+--                 maximasOcurrencias isPlayer (count+1) max fs
 
-        else 
-            maximasOcurrencias isPlayer 0 max fs
+--         else 
+--             maximasOcurrencias isPlayer 0 max fs
             
-    |not isPlayer = 
-        if f == "X" then
-            if max < (count + 1) then
-                maximasOcurrencias isPlayer (count+1) (max+1) fs
-            else 
-                maximasOcurrencias isPlayer (count+1) max fs
+--     |not isPlayer = 
+--         if f == "X" then
+--             if max < (count + 1) then
+--                 maximasOcurrencias isPlayer (count+1) (max+1) fs
+--             else 
+--                 maximasOcurrencias isPlayer (count+1) max fs
 
-        else 
-            maximasOcurrencias isPlayer 0 max fs
+--         else 
+--             maximasOcurrencias isPlayer 0 max fs
 
--- valoresMaximos :: [[[Char]]] -> [[Int]]
-valoresMaximos [] = []
-valoresMaximos (b:bs) = (map (maximasOcurrencias False 0 0) b ++ map (maximasOcurrencias False 0 0) (transpose b)
-                        ++ map (maximasOcurrencias False 0 0) (diagonals (transpose b))
-                        ++ map (maximasOcurrencias False 0 0) (diagonals (map reverse (transpose b))) )
-                        : valoresMaximos bs
+-- -- valoresMaximos :: [[[Char]]] -> [[Int]]
+-- valoresMaximos [] = []
+-- valoresMaximos (b:bs) = (map (maximasOcurrencias False 0 0) b ++ map (maximasOcurrencias False 0 0) (transpose b)
+--                         ++ map (maximasOcurrencias False 0 0) (diagonals (transpose b))
+--                         ++ map (maximasOcurrencias False 0 0) (diagonals (map reverse (transpose b))) )
+--                         : valoresMaximos bs
 
-boardsPosibles _ [] _ = []
-boardsPosibles board (p:ps) isPlayer = (ponerFicha board p isPlayer) : boardsPosibles board ps isPlayer
-
+-- boardsPosibles _ [] _ = []
+-- boardsPosibles board (p:ps) isPlayer = (ponerFicha board p isPlayer) : boardsPosibles board ps isPlayer
+posOfTrue ::[Bool] -> Int -> [Int]
 posOfTrue [] _ = []
 posOfTrue (x:xs) y
     |x = y : posOfTrue xs (y+1)
     |otherwise = posOfTrue xs (y+1)
 
-
+diagonals :: [[[Char]]] -> [[[Char]]]
 diagonals []       = []
 diagonals ([]:xs) = xs
 diagonals x      = zipWith (++) (map ((:[]) . head) x ++ repeat [])
                                     ([]:(diagonals (map tail x)))
 
+
+transpose :: [[[Char]]] -> [[[Char]]]
 transpose ([]:_) = []
 transpose x = (map head x) : transpose (map tail x)
 
+checkDiagonals :: [[[Char]]] -> Bool -> Bool
 checkDiagonals board isPlayer = checkHorizontal (diagonals board)  isPlayer || checkHorizontal (diagonals (map reverse board)) isPlayer
 
+checkVertical :: [[[Char]]] -> Bool -> Bool
 checkVertical board isPlayer = checkHorizontal (transpose board) isPlayer
 
 checkHorizontal :: [[[Char]]] -> Bool -> Bool
