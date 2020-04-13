@@ -239,32 +239,47 @@ estrategia3 board isPlayer = do
 
                     if length movimientosCorrectos > 0 && length movimientosCorrectos /= length espaciosDobles then
                         do
+                            --------------------------------------------
                         let posiblesMovimientosCorrectos = map (espaciosDobles !!) movimientosCorrectos
                         
-                        let horiJugador = (posiblesHorizontales board posiblesMovimientosCorrectos True)
+                        let horiJugador = map fst (posiblesHorizontales board posiblesMovimientosCorrectos True)
+                        print (posiblesHorizontales board posiblesMovimientosCorrectos True)
                         -- print 4
+
+                        let dondepuedejugaroponente = (map (ponerFicha True board) posiblesMovimientosCorrectos)
+
+                        -- let finalizar = zipWith (ponerFicha True) dondepuedejugaroponente (map (validPositions) (map (transpose) dondepuedejugaroponente))
+
+                        let puedeGanarsiHaceestemov = puedeGanarEnOtraJugada True dondepuedejugaroponente 
+
+
                         let consecHoriJugador = potencial3enRayaH True horiJugador posiblesMovimientosCorrectos
                         -- print consecHoriJugador
-    ---Poner if por aqui de any==true
-                        let movimientos3H = posOfTrue consecHoriJugador 0
-                        let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
+    -- ---Poner if por aqui de any==true
+    --                     let movimientos3H = posOfTrue consecHoriJugador 0
+    --                     let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
     
                         -- print "hola1"
-                        let deboBloquear = puedeGanarEnOtraJugada True boardsposible3H
+                        -- let deboBloquear = puedeGanarEnOtraJugada True boardsposible3H
                         -- print "hola2"
                         -- print movimientos3H
                         -- print boardsposible3H
                         
                         -- print deboBloquear
                         -- print (posOfTrue deboBloquear 0)
-                        if any (True==) deboBloquear then
+                        ----------------------------------------------------
+                        if any (True==) puedeGanarsiHaceestemov then
                             do
+                            print posiblesMovimientosCorrectos
                             -- print "hola3"
-                            let a = posOfTrue deboBloquear 0
+                            let a = posOfTrue puedeGanarsiHaceestemov 0
                             -- print a
-                            let b = movimientos3H !! (a!!0)
-                            let c = validPos !! b
+                            -- let b = movimientos3H !! (a!!0)
+                            let c = posiblesMovimientosCorrectos !! (a!!0)
                             -- print ( "estoy en 3 h y devuelvo" ++show c)
+                            print a
+                            -- print b
+                            print c
                             return (c)
 
                         else
@@ -283,7 +298,9 @@ estrategia3 board isPlayer = do
                         --Si hay alguna columna por la que el jugador pueda ganar si el bot tira alli, el bot evitara tirar alli
 
                         do
-                        let horiJugador = (posiblesHorizontales board validPos True)
+                        let horiJugador = map fst (posiblesHorizontales board validPos True)
+                        print (posiblesHorizontales board validPos True)
+
                         -- print 4
                         let consecHoriJugador = potencial3enRayaH True horiJugador validPos
                         -- print consecHoriJugador
@@ -334,7 +351,8 @@ puedeGanarEnOtraJugada isPlayer (b:bs)
         [foldl (||) (False) (map (comprobarWin True) (map (ponerFicha True b ) (validPositions (transpose b))))] ++ puedeGanarEnOtraJugada isPlayer bs
     |otherwise = []
 
-rayaImparable :: Int -> Bool -> [[Char]] -> Int
+-- rayaImparable :: Int -> Bool -> [[Char]] -> Int
+--Funcion que indica la longitud de una raya empezando en una posicion concreta en adelante para el jugador isPlayer
 rayaImparable n _ [] = n 
 rayaImparable n isPlayer (f:fs)
     |isPlayer = 
@@ -347,7 +365,7 @@ rayaImparable n isPlayer (f:fs)
         else n
     |otherwise = n
 
-potencial3enRayaH :: Bool -> [[[Char]]] -> [Int] -> [Bool]
+-- potencial3enRayaH :: Bool -> [[[Char]]] -> [Int] -> [Bool]
 potencial3enRayaH _ [] _ = []
 potencial3enRayaH isPlayer (f:fs) (p:ps) = (rayaImparable 0 isPlayer (drop (p) f) + rayaImparable 0 isPlayer (drop ((length f) - p) (reverse f)) >= 3)
                                         : potencial3enRayaH isPlayer fs ps
@@ -367,10 +385,10 @@ estrategia2 board isPlayer = do
         -- print (maxGlobal)
         -- let (listaGreedyS, listaGreedyC)
         -- print (posOfFalse (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False))) 0)
-        print maxGlobal
-        -- print xd
-        print mejoresPosiciones
-        print "hi"
+        -- print maxGlobal
+        -- -- print xd
+        -- print mejoresPosiciones
+        -- print "hi"
         randPos <- randInt 0 ((length mejoresPosiciones) - 1)
         -- print validPos
         -- print mejoresPosiciones
@@ -413,7 +431,7 @@ greedy board validPos =
         -- print validPos
     let posColumnas = (posiblesColumnas board validPos False)
     let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
-    let posHorizontales = (posiblesHorizontales board validPos False)
+    let posHorizontales = map (fst) (posiblesHorizontales board validPos False)
     let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
 
     let posDiagonales1 = posiblesDiagonales board validPos False
@@ -505,15 +523,15 @@ posiblesColumnas :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
 posiblesColumnas _ [] _ = []
 posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha isPlayer board p ))) !! p)) : posiblesColumnas board ps isPlayer
 
-posiblesHorizontales :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
+-- posiblesHorizontales :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
 posiblesHorizontales     _ [] _ = []
-posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalVacia p (ponerFicha isPlayer board p )) : posiblesHorizontales board ps isPlayer
+posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalVacia p 0 (ponerFicha isPlayer board p )) : posiblesHorizontales board ps isPlayer
 
-cogerUltimaHorizontalVacia :: Int -> [[[Char]]] -> [[Char]]
-cogerUltimaHorizontalVacia _ (f:[]) = f
-cogerUltimaHorizontalVacia pos (f:fs) 
-    |(head fs) !! pos == "_" = f
-    |otherwise = cogerUltimaHorizontalVacia pos fs
+-- cogerUltimaHorizontalVacia :: Int -> [[[Char]]] -> [[Char]]
+cogerUltimaHorizontalVacia _ hori (f:[]) = (f, hori)
+cogerUltimaHorizontalVacia pos hori (f:fs) 
+    |(head fs) !! pos == "_" = (f, hori)
+    |otherwise = cogerUltimaHorizontalVacia pos (hori+1) fs
 
 maxPos :: Int -> Int -> [Int] -> [Int]
 maxPos _  _ []  = []
