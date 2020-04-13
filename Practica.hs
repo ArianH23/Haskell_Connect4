@@ -219,64 +219,93 @@ estrategia3 board isPlayer = do
                 else
                     --Comprueba si en 2 movimientos puede ganar el jugador si no intento bloquear nada
                     do
-                    
-                    -- let boardsSiJugadorMueveyYoNo = map (poner)
-                    -- print 3
-                    let horiJugador = (posiblesHorizontales board validPos True)
-                    -- print 4
-                    let consecHoriJugador = potencial3enRayaH True horiJugador validPos
-                    -- print consecHoriJugador
----Poner if por aqui de any==true
-                    let movimientos3H = posOfTrue consecHoriJugador 0
-                    let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
+                    let espaciosDobles = posOfTrue (columnas2Espacios board) 0
+                    -- print espaciosDobles
 
-                    -- print "hola1"
-                    let deboBloquear = puedeGanarEnOtraJugada True boardsposible3H
-                    -- print "hola2"
-                    -- print movimientos3H
-                    -- print boardsposible3H
+                    let tableroSiJuegaBot = map (ponerFicha' board False) (espaciosDobles)
+                    let tableroSiJuegaPlayer = map (ponerFicha' board True) (espaciosDobles)
+
+                    let botPlayer = zipWith (ponerFichaZip True) tableroSiJuegaBot espaciosDobles
+                    let playerBot = zipWith (ponerFichaZip False) tableroSiJuegaPlayer espaciosDobles
+
+                    let evita1 = map (comprobarWin True) botPlayer
+                    let evita2 = map (comprobarWin False) playerBot
                     
-                    -- print deboBloquear
-                    -- print (posOfTrue deboBloquear 0)
-                    if any (True==) deboBloquear then
+                    let posicionesaEvitar = zipWith (||) evita1 evita2
+                    
+                    let movimientosCorrectos = (posOfFalseArray 0 posicionesaEvitar)
+
+                    if length movimientosCorrectos > 0 && length movimientosCorrectos /= length espaciosDobles then
                         do
-                        -- print "hola3"
-                        let a = posOfTrue deboBloquear 0
-                        -- print a
-                        let b = movimientos3H !! (a!!0)
-                        let c = validPos !! b
-                        -- print ( "estoy en 3 h y devuelvo" ++show c)
-                        return (c)
+                        let posiblesMovimientosCorrectos = map (espaciosDobles !!) movimientosCorrectos
+                        
+                        let horiJugador = (posiblesHorizontales board posiblesMovimientosCorrectos True)
+                        -- print 4
+                        let consecHoriJugador = potencial3enRayaH True horiJugador posiblesMovimientosCorrectos
+                        -- print consecHoriJugador
+    ---Poner if por aqui de any==true
+                        let movimientos3H = posOfTrue consecHoriJugador 0
+                        let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
+    
+                        -- print "hola1"
+                        let deboBloquear = puedeGanarEnOtraJugada True boardsposible3H
+                        -- print "hola2"
+                        -- print movimientos3H
+                        -- print boardsposible3H
+                        
+                        -- print deboBloquear
+                        -- print (posOfTrue deboBloquear 0)
+                        if any (True==) deboBloquear then
+                            do
+                            -- print "hola3"
+                            let a = posOfTrue deboBloquear 0
+                            -- print a
+                            let b = movimientos3H !! (a!!0)
+                            let c = validPos !! b
+                            -- print ( "estoy en 3 h y devuelvo" ++show c)
+                            return (c)
+
+                        else
+                            do
+                            (soluciones, x) <- greedy board posiblesMovimientosCorrectos
+
+                            let solucionesU = (elementosUnicos soluciones)
+
+                            let movimientoValidoMasGreedy = posiblesMovimientosCorrectos !! (solucionesU !! (((length solucionesU) - 1) `div` 2))
+
+                            return movimientoValidoMasGreedy
+
+                    
                     else
                         --Si hay alguna columna por la que pueda ganar el bot si el jugador tira alli justo antes, el bot no tirara alli
                         --Si hay alguna columna por la que el jugador pueda ganar si el bot tira alli, el bot evitara tirar alli
 
                         do
-                        let espaciosDobles = posOfTrue (columnas2Espacios board) 0
-                        -- print espaciosDobles
-
-                        let tableroSiJuegaBot = map (ponerFicha' board False) (espaciosDobles)
-                        let tableroSiJuegaPlayer = map (ponerFicha' board True) (espaciosDobles)
-
-                        let botPlayer = zipWith (ponerFichaZip True) tableroSiJuegaBot espaciosDobles
-                        let playerBot = zipWith (ponerFichaZip False) tableroSiJuegaPlayer espaciosDobles
-
-                        let evita1 = map (comprobarWin True) botPlayer
-                        let evita2 = map (comprobarWin False) playerBot
+                        let horiJugador = (posiblesHorizontales board validPos True)
+                        -- print 4
+                        let consecHoriJugador = potencial3enRayaH True horiJugador validPos
+                        -- print consecHoriJugador
+    ---Poner if por aqui de any==true
+                        let movimientos3H = posOfTrue consecHoriJugador 0
+                        let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
+    
+                        -- print "hola1"
+                        let deboBloquear = puedeGanarEnOtraJugada True boardsposible3H
+                        -- print "hola2"
+                        -- print movimientos3H
+                        -- print boardsposible3H
                         
-                        let posicionesaEvitar = zipWith (||) evita1 evita2
-                        
-                        let movimientosCorrectos = (posOfFalseArray 0 posicionesaEvitar)
-
-                        if length movimientosCorrectos > 0 then
+                        -- print deboBloquear
+                        -- print (posOfTrue deboBloquear 0)
+                        if any (True==) deboBloquear then
                             do
-                            let movimientoCentricoCorrecto = espaciosDobles !! (movimientosCorrectos !! (((length movimientosCorrectos) - 1) `div` 2))
-                            return movimientoCentricoCorrecto
-                            -- print "hola4"
-                            -- print horiJugador
-                            -- print consecHoriJugador
-
-                            -- print (puedeGanarEnOtraJugada True posiblesMovimientosJugador)
+                            -- print "hola3"
+                            let a = posOfTrue deboBloquear 0
+                            -- print a
+                            let b = movimientos3H !! (a!!0)
+                            let c = validPos !! b
+                            -- print ( "estoy en 3 h y devuelvo" ++show c)
+                            return (c)
 
                         else
                             --No quedan mas opciones
