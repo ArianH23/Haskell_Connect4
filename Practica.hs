@@ -189,38 +189,8 @@ estrategia3 board isPlayer = do
             do
             let validPos = validPositions (transpose board)
 
-            let posColumnas = (posiblesColumnas board validPos False)
-            let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
-            let posHorizontales = (posiblesHorizontales board validPos False)
-            let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
+            (mejoresPosiciones, maxGlobal) <- greedy board validPos
 
-            let posDiagonales1 = posiblesDiagonales board validPos False
-            let diag1 = map fst posDiagonales1
-            let positions1 = map snd posDiagonales1
-            let consecDiagonales1 = (consecutivosHorizontales False diag1 positions1)
-
-            let posDiagonales2 = posiblesDiagonales board validPos True
-            let diag2 = map fst posDiagonales2
-            let positions2 = map snd posDiagonales2
-            let consecDiagonales2 = (consecutivosHorizontales False diag2 positions2)
-
-            let maxGlobal = maximum (consecVerticales ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
-            let xd = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
-            let mejoresPosiciones = uneListas xd
-            -- print validPos
-            
-            -- print (diagonals board)
-
-            -- print posDiagonales1
-            -- print posDiagonales2
-
-            -- print posHorizontales
-
-            -- print xd
-            -- print mejoresPosiciones
-            -- print maxGlobal
-            -- printPos
-            -- print validPos
             if maxGlobal == 4 then
                 do  -- Comprueba si puedes ganar, en tal caso, se hace alguna de las posibles jugadas ganadoras
                     randPos <- randInt 0 ((length mejoresPosiciones) - 1)
@@ -279,7 +249,7 @@ estrategia3 board isPlayer = do
                         return (c)
                     else
                         --Si hay alguna columna por la que pueda ganar el bot si el jugador tira alli justo antes, el bot no tirara alli
-
+                        --Si hay alguna columna por la que el jugador pueda ganar si el bot tira alli, el bot evitara tirar alli
 
                         do
                         let espaciosDobles = posOfTrue (columnas2Espacios board) 0
@@ -309,6 +279,7 @@ estrategia3 board isPlayer = do
                             -- print (puedeGanarEnOtraJugada True posiblesMovimientosJugador)
 
                         else
+                            --No quedan mas opciones
                             do
                             let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
                             -- print ( "estoy en predet h y devuelvo" ++show (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2))))
@@ -358,33 +329,14 @@ estrategia2 board isPlayer = do
         -- print (map reverse (transpose board))
         let validPos = validPositions (transpose board)
         -- print validPos
-        let posColumnas = (posiblesColumnas board validPos False)
-        let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
-        let posHorizontales = (posiblesHorizontales board validPos False)
-        let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
-
-        let posDiagonales1 = posiblesDiagonales board validPos False
-        let diag1 = map fst posDiagonales1
-        let positions1 = map snd posDiagonales1
-        let consecDiagonales1 = (consecutivosHorizontales False diag1 positions1)
-
-        let posDiagonales2 = posiblesDiagonales board validPos True
-        let diag2 = map fst posDiagonales2
-        let positions2 = map snd posDiagonales2
-        let consecDiagonales2 = (consecutivosHorizontales False diag2 positions2)
-
-        -- print posDiagonales2s)
-        -- print posHorizontales
-        let maxGlobal = maximum (consecVerticales ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
-        let xd = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
-        let mejoresPosiciones = uneListas xd
+        (mejoresPosiciones, maxGlobal) <- greedy board validPos
         -- print (maxGlobal)
-    
+        -- let (listaGreedyS, listaGreedyC)
         -- print (posOfFalse (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False))) 0)
         print maxGlobal
-        print xd
+        -- print xd
         print mejoresPosiciones
-
+        print "hi"
         randPos <- randInt 0 ((length mejoresPosiciones) - 1)
         -- print validPos
         -- print mejoresPosiciones
@@ -420,6 +372,33 @@ estrategia2 board isPlayer = do
 -- takeElementsOfLists (f:fs) (x:xs)
 --     |x == 0 = [f] ++ takeElementsOfLists fs (map (-1) xs)
 --     |otherwise = takeElementsOfLists fs (map (-1) (x:xs))
+
+greedy board validPos =
+    do 
+    -- let validPos = validPositions (transpose board)
+        -- print validPos
+    let posColumnas = (posiblesColumnas board validPos False)
+    let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
+    let posHorizontales = (posiblesHorizontales board validPos False)
+    let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
+
+    let posDiagonales1 = posiblesDiagonales board validPos False
+    let diag1 = map fst posDiagonales1
+    let positions1 = map snd posDiagonales1
+    let consecDiagonales1 = (consecutivosHorizontales False diag1 positions1)
+
+    let posDiagonales2 = posiblesDiagonales board validPos True
+    let diag2 = map fst posDiagonales2
+    let positions2 = map snd posDiagonales2
+    let consecDiagonales2 = (consecutivosHorizontales False diag2 positions2)
+
+    -- print posDiagonales2s)
+    -- print posHorizontales
+    let maxGlobal = maximum (consecVerticales ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
+    let consecutivosFiltrado = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
+    let mejoresPosiciones = uneListas consecutivosFiltrado
+
+    return ((mejoresPosiciones, maxGlobal))
 
 comprobarWin t board = checkHorizontal board t || checkVertical board t || checkDiagonals board t
 
