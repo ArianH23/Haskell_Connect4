@@ -37,13 +37,24 @@ escogerEstrategia = do
             putStrLn "Estrategia no valida, vuelve a escoger por favor.\n"
             escogerEstrategia
 
+
+
+muestraBoard' :: [[Char]] -> IO ()
+muestraBoard' [] = return()
+muestraBoard' (b:bs) = do
+    putStr $ id (b ++ "|")
+    muestraBoard' bs
+
 muestraBoard :: [[[Char]]] -> IO ()
 muestraBoard [] = return()
 muestraBoard (b:bs) = do 
     muestraBoard bs
-    print b
+    putStr $ id ("|")
+    muestraBoard' b
+    putStrLn ""
 
 primerTurno :: IO Bool
+-- Funcion que pide al usuario quien quiere que juegue primero, él, o el bot.
 primerTurno = do
     putStrLn "\nQuieres tener el primer movimiento (escribe 1) o el segundo (escribe 2)?"
     putStrLn "Recuerda que el bot siempre sera las X y tu los O?"
@@ -60,7 +71,7 @@ primerTurno = do
         if num == 1 then
             return (True)
         else
-            return(False)
+            return (False)
 
 escogerDimensiones :: IO (Int, Int)
 escogerDimensiones = do
@@ -111,11 +122,14 @@ replaceB (f:fs)  columnaE isPlayer
     | otherwise = f : replaceB fs (columnaE - 1) isPlayer
 
 jugadaRealizada :: Bool -> Int -> IO ()
+--Muestra en pantalla el tablero tras la ultima jugada que se ha realizado y apunta hacia el.
+--E indica cual ha sido ese movimiento y por quien.
 jugadaRealizada isPlayer pos
     |isPlayer = putStrLn ("Has puesto ficha en la posición " ++ (show (pos + 1)) ++ " ↖\n")
     |otherwise = putStrLn ("El bot ha puesto ficha en la posición " ++ (show (pos + 1)) ++ " ↖\n")
 
 partida:: [[[Char]]] -> Bool -> ([[[Char]]] -> Bool -> IO Int) -> IO ()
+-- Funcion que se encargara de actualizar los turnos mientras la partida continue interactuando con el usuario
 partida board t estrategia = do
     posicionNuevaFicha <- estrategia board t
     let nboard = ponerFicha t board posicionNuevaFicha 
@@ -139,6 +153,8 @@ partida board t estrategia = do
             partida nboard (not t) estrategia
             return()
 
+empate :: [[[Char]]] -> Bool
+-- Indica si el tablero esta completo, y por lo tanto, si ha habido un empate
 empate board = not (foldr (||) False (map (any ("_"==)) board))
 
 ganador :: Bool -> IO ()
@@ -154,7 +170,7 @@ turnoJugador board = do
     putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show columnas ++ "\n")
     columnaE <- getLine
     -- print (head b)
-    let validPos = map (+1) (validPositions (transpose board))
+    let validPos = map (+1) (validPositions board)
 
     if not (any ((read columnaE :: Int)==) validPos) then
         do
@@ -172,7 +188,7 @@ estrategia1 board isPlayer = do
         return (x)
     else
         do
-        let validPos = validPositions (transpose board)
+        let validPos = validPositions board
         posrandom <- (randInt 0 ((length validPos) - 1))
         let posicionNuevaFicha = validPos !! posrandom
         -- putStrLn ("El bot ha colocado ficha en la posicion " ++ (show (posicionNuevaFicha+1) )++ "\n")
@@ -189,17 +205,19 @@ estrategia3 board isPlayer = do
             return (x)
         else
             do
-            let validPos = validPositions (transpose board)
+            let validPos = validPositions board
 
             (mejoresPosiciones, maxGlobal) <- greedy board validPos
 
+
+            --Si el bot puede ganar la partida, la ganara
             if maxGlobal == 4 then
                 do  -- Comprueba si puedes ganar, en tal caso, se hace alguna de las posibles jugadas ganadoras
-                    randPos <- randInt 0 ((length mejoresPosiciones) - 1)
+                    randWinningPos <- randInt 0 ((length mejoresPosiciones) - 1)
                     -- print mejoresPosiciones
                     -- print ( "Voy a ganar y devuelvo" ++show (mejoresPosiciones !! randPos))
 
-                    return (validPos !! (mejoresPosiciones !! randPos))
+                    return (validPos !! (mejoresPosiciones !! randWinningPos))
             
             else
 
@@ -219,7 +237,9 @@ estrategia3 board isPlayer = do
                     return (movimientoBloqueador)
                 
                 else
-                    --Comprueba si en 2 movimientos puede ganar el jugador si no intento bloquear nada
+                    --Si hay alguna columna por la que pueda ganar el bot si el jugador tira alli justo antes, el bot no tirara alli
+                    --Si hay alguna columna por la que el jugador pueda ganar si el bot tira alli, el bot evitara tirar alli
+
                     do
                     let espaciosDobles = posOfTrue (columnas2Espacios board) 0
                     -- print espaciosDobles
@@ -236,8 +256,8 @@ estrategia3 board isPlayer = do
                     let posicionesaEvitar = zipWith (||) evita1 evita2
                     
                     let movimientosCorrectos = (posOfFalseArray 0 posicionesaEvitar)
-
-                    if length movimientosCorrectos > 0 && length movimientosCorrectos /= length espaciosDobles then
+                    -- && length movimientosCorrectos /= (length espaciosDobles -1)
+                    if length movimientosCorrectos > 0 then
                         do
                             --------------------------------------------
                         let posiblesMovimientosCorrectos = map (espaciosDobles !!) movimientosCorrectos
@@ -255,9 +275,9 @@ estrategia3 board isPlayer = do
 
                         let consecHoriJugador = potencial3enRayaH True horiJugador posiblesMovimientosCorrectos
                         -- print consecHoriJugador
-    -- ---Poner if por aqui de any==true
-    --                     let movimientos3H = posOfTrue consecHoriJugador 0
-    --                     let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
+                        -- ---Poner if por aqui de any==true
+                        --                     let movimientos3H = posOfTrue consecHoriJugador 0
+                        --                     let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
     
                         -- print "hola1"
                         -- let deboBloquear = puedeGanarEnOtraJugada True boardsposible3H
@@ -294,9 +314,8 @@ estrategia3 board isPlayer = do
 
                     
                     else
-                        --Si hay alguna columna por la que pueda ganar el bot si el jugador tira alli justo antes, el bot no tirara alli
-                        --Si hay alguna columna por la que el jugador pueda ganar si el bot tira alli, el bot evitara tirar alli
-
+                        --Comprueba si en 2 movimientos puede ganar el jugador si no intento bloquear nada
+                        
                         do
                         let horiJugador = map fst (posiblesHorizontales board validPos True)
                         print (posiblesHorizontales board validPos True)
@@ -348,7 +367,7 @@ puedeGanarEnOtraJugada :: Bool -> [[[[Char]]]] -> [Bool]
 puedeGanarEnOtraJugada _ [] = []
 puedeGanarEnOtraJugada isPlayer (b:bs)
     |isPlayer = 
-        [foldl (||) (False) (map (comprobarWin True) (map (ponerFicha True b ) (validPositions (transpose b))))] ++ puedeGanarEnOtraJugada isPlayer bs
+        [foldl (||) (False) (map (comprobarWin True) (map (ponerFicha True b ) (validPositions  b)))] ++ puedeGanarEnOtraJugada isPlayer bs
     |otherwise = []
 
 -- rayaImparable :: Int -> Bool -> [[Char]] -> Int
@@ -379,7 +398,7 @@ estrategia2 board isPlayer = do
         else
             do
         -- print (map reverse (transpose board))
-        let validPos = validPositions (transpose board)
+        let validPos = validPositions board
         -- print validPos
         (mejoresPosiciones, maxGlobal) <- greedy board validPos
         -- print (maxGlobal)
@@ -539,8 +558,14 @@ maxPos max pos (a:as)
     |a == max = [pos] ++ maxPos max (pos+1) as
     |otherwise = maxPos max (pos + 1) as
 
-validPositions :: [[[Char]]] -> [Int]
-validPositions board = posOfTrue (map (any ("_"==)) board) 0
+
+validPositions board = validPositions' (transpose board)
+
+
+validPositions' :: [[[Char]]] -> [Int]
+validPositions' board = posOfTrue (map (any ("_"==)) board) 0
+
+
 
 -- maximasOcurrencias  _ _ max [] = max
 -- maximasOcurrencias isPlayer count max (f:fs)

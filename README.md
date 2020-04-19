@@ -28,12 +28,12 @@ Al iniciar la partida se pediran una serie de valores.
     >Elige el numero de columnas del tablero
     7
 
-    ["_","_","_","_","_","_","_"]
-    ["_","_","_","_","_","_","_"]
-    ["_","_","_","_","_","_","_"]
-    ["_","_","_","_","_","_","_"]
-    ["_","_","_","_","_","_","_"]
-    ["_","_","_","_","_","_","_"]
+    |_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|
     ```
 * A continuacion se pedira la estrategia. Asegurate de poner uno de los valores mostrados o se mostrr un mensaje de error.
     ```
