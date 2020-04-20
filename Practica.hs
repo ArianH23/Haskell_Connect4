@@ -10,21 +10,23 @@ randInt low high = do
 
 
 createBoard :: Int -> Int -> [[[Char]]]
+-- Funcion que devuelve un tablero de n filas y m columnas
 createBoard n m = splitEvery m (take (n * m) rows)
-    -- where x = read n :: Int
-    --       y = read m :: Int
 
 rows :: [[Char]]
+-- Funcion recursiva que sirve para crear el tablero
 rows = ['_'] : rows
 
 
 splitEvery :: Int -> [[Char]] -> [[[Char]]]
+-- Funcion que divide una lista en sublistas cada n elementos
 splitEvery _ [] = []
 splitEvery n list = first : (splitEvery n rest)
   where
     (first,rest) = splitAt n list
 
 escogerEstrategia :: IO Int
+-- Funcion que pide al usuario contra que bot desea jugar
 escogerEstrategia = do
     putStrLn "Que estrategia quieres que el bot tenga?: 1.Random 2.Greedy 3.Smart"
 
@@ -40,12 +42,14 @@ escogerEstrategia = do
 
 
 muestraBoard' :: [[Char]] -> IO ()
+-- Funcion que ayuda a "muestraBoard" a mostrar el tablero por la pantalla
 muestraBoard' [] = return()
 muestraBoard' (b:bs) = do
     putStr $ id (b ++ "|")
     muestraBoard' bs
 
 muestraBoard :: [[[Char]]] -> IO ()
+--Muestra en la pantalla el tablero recibido
 muestraBoard [] = return()
 muestraBoard (b:bs) = do 
     muestraBoard bs
@@ -74,6 +78,7 @@ primerTurno = do
             return (False)
 
 escogerDimensiones :: IO (Int, Int)
+--Funcion que pide al usuario las dimensiones del tablero en el que desea jugar
 escogerDimensiones = do
     putStrLn "Elige el numero de filas del tablero"
     n <- getLine
@@ -81,12 +86,7 @@ escogerDimensiones = do
     m <- getLine
     let x = (read n :: Int)
     let y = (read m :: Int)
-    -- if (x < 4 && y < 4) || x <1 || y <1 then
-    --     do
-    --     putStrLn "Al menos uno de los dos valores tiene que ser mayor o igual que 4 y ambos positivos para que el juego tenga sentido."
-    --     putStrLn "Por favor, vuelve a introducir las dimensiones.\n"
-    --     escogerDimensiones
-    -- else 
+
     return((x,y))
 
 main :: IO ()
@@ -106,6 +106,8 @@ main = do
         partida b t estrategia3
 
 ponerFicha :: Bool -> [[[Char]]] -> Int -> [[[Char]]]
+-- Funcion que tras recibir un tablero, jugador, y columna, 
+-- devuelve un tablero tras haber colocado en el anterior la ficha del jugador en su respectiva columna
 ponerFicha isPlayer (f:fs) columnaE
     | f !! (columnaE) == "_" = (replaceB  f columnaE isPlayer) : fs
     | f !! (columnaE) == "X" || f !! (columnaE) == "O" = f : (ponerFicha isPlayer fs columnaE )
@@ -113,6 +115,7 @@ ponerFicha isPlayer (f:fs) columnaE
 
 
 replaceB :: [[Char]] -> Int -> Bool -> [[Char]]
+-- Funcion que se encarga de substituir la posicion columnaE de la lista (f:fs) por la ficha del jugador indicado
 replaceB (f:fs)  columnaE isPlayer
     | columnaE == 0 = 
                 if isPlayer then
@@ -122,8 +125,8 @@ replaceB (f:fs)  columnaE isPlayer
     | otherwise = f : replaceB fs (columnaE - 1) isPlayer
 
 jugadaRealizada :: Bool -> Int -> IO ()
---Muestra en pantalla el tablero tras la ultima jugada que se ha realizado y apunta hacia el.
---E indica cual ha sido ese movimiento y por quien.
+-- Muestra en pantalla el tablero tras la ultima jugada que se ha realizado y apunta hacia el.
+-- E indica cual ha sido ese movimiento y por quien.
 jugadaRealizada isPlayer pos
     |isPlayer = putStrLn ("Has puesto ficha en la posición " ++ (show (pos + 1)) ++ " ↖\n")
     |otherwise = putStrLn ("El bot ha puesto ficha en la posición " ++ (show (pos + 1)) ++ " ↖\n")
@@ -158,6 +161,7 @@ empate :: [[[Char]]] -> Bool
 empate board = not (foldr (||) False (map (any ("_"==)) board))
 
 ganador :: Bool -> IO ()
+-- Muestra en pantalla el texto del correspondiente ganador de la partida si ha habido ganador
 ganador t = do
     if t then
         putStrLn "Has ganado tú!"
@@ -165,6 +169,7 @@ ganador t = do
         putStrLn "Ha ganado el bot!"
 
 turnoJugador :: [[[Char]]] -> IO Int
+--Funcion que se encarga de pedir al jugador el numero de columna en el que poner la ficha, entre 1 y N.
 turnoJugador board = do
     let columnas = (length (head board))
     putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show columnas ++ "\n")
@@ -181,6 +186,7 @@ turnoJugador board = do
         return ((read columnaE :: Int) -1)
 
 estrategia1 :: [[[Char]]] -> Bool -> IO Int
+-- Funcion de la estrategia1 de movimientos aleatorios
 estrategia1 board isPlayer = do
     if isPlayer then
         do
@@ -198,6 +204,7 @@ estrategia1 board isPlayer = do
 
 
 estrategia3 :: [[[Char]]] -> Bool -> IO Int
+-- Funcion de la estrategia3 smart. Detalles en la documentación
 estrategia3 board isPlayer = do 
         if isPlayer then
             do
@@ -230,7 +237,7 @@ estrategia3 board isPlayer = do
                 -- print sol2
                 if any (True==) jugadaGanadoraJugador then
                     do 
-                    let posNextMove = posOfTrueMove jugadaGanadoraJugador 0
+                    let posNextMove = (posOfTrueArray 0 jugadaGanadoraJugador) !! 0
                     let movimientoBloqueador = validPos !! posNextMove
                     -- print ( "estoy en movimientoBloqueador y devuelvo" ++show movimientoBloqueador)
 
@@ -241,7 +248,7 @@ estrategia3 board isPlayer = do
                     --Si hay alguna columna por la que el jugador pueda ganar si el bot tira alli, el bot evitara tirar alli
 
                     do
-                    let espaciosDobles = posOfTrue (columnas2Espacios board) 0
+                    let espaciosDobles = posOfTrueArray 0 (columnas2Espacios board)
                     -- print espaciosDobles
 
                     let tableroSiJuegaBot = map (ponerFicha False board ) (espaciosDobles)
@@ -276,7 +283,7 @@ estrategia3 board isPlayer = do
                         let consecHoriJugador = potencial3enRayaH True horiJugador posiblesMovimientosCorrectos
                         -- print consecHoriJugador
                         -- ---Poner if por aqui de any==true
-                        --                     let movimientos3H = posOfTrue consecHoriJugador 0
+                        --                     let movimientos3H = posOfTrueArray consecHoriJugador 0
                         --                     let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
     
                         -- print "hola1"
@@ -286,16 +293,16 @@ estrategia3 board isPlayer = do
                         -- print boardsposible3H
                         
                         -- print deboBloquear
-                        -- print (posOfTrue deboBloquear 0)
+                        -- print (posOfTrueArray deboBloquear 0)
                         ----------------------------------------------------
                         if any (True==) puedeGanarsiHaceestemov then
                             do
                             print posiblesMovimientosCorrectos
                             -- print "hola3"
-                            let a = posOfTrue puedeGanarsiHaceestemov 0
+                            let a = posOfTrueArray 0 puedeGanarsiHaceestemov
                             -- print a
                             -- let b = movimientos3H !! (a!!0)
-                            let c = posiblesMovimientosCorrectos !! (a!!0)
+                            let c = posiblesMovimientosCorrectos !! (a !! 0)
                             -- print ( "estoy en 3 h y devuelvo" ++show c)
                             print a
                             -- print b
@@ -324,7 +331,7 @@ estrategia3 board isPlayer = do
                         let consecHoriJugador = potencial3enRayaH True horiJugador validPos
                         -- print consecHoriJugador
     ---Poner if por aqui de any==true
-                        let movimientos3H = posOfTrue consecHoriJugador 0
+                        let movimientos3H = posOfTrueArray 0 consecHoriJugador
                         let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
     
                         -- print "hola1"
@@ -334,13 +341,13 @@ estrategia3 board isPlayer = do
                         -- print boardsposible3H
                         
                         -- print deboBloquear
-                        -- print (posOfTrue deboBloquear 0)
+                        -- print (posOfTrueArray deboBloquear 0)
                         if any (True==) deboBloquear then
                             do
                             -- print "hola3"
-                            let a = posOfTrue deboBloquear 0
+                            let a = posOfTrueArray 0 deboBloquear
                             -- print a
-                            let b = movimientos3H !! (a!!0)
+                            let b = movimientos3H !! (a !! 0)
                             let c = validPos !! b
                             -- print ( "estoy en 3 h y devuelvo" ++show c)
                             return (c)
@@ -354,6 +361,7 @@ estrategia3 board isPlayer = do
                             return (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2)))
 
 columnasEspacios :: Int -> [[Char]] -> Int
+-- Dada una columna, indica cuantos espacios libres hay en ella.
 columnasEspacios num [] = num
 columnasEspacios num (b:bs)
     |b == "_" = columnasEspacios (num + 1) bs
@@ -361,35 +369,40 @@ columnasEspacios num (b:bs)
 
 
 columnas2Espacios :: [[[Char]]] -> [Bool]
+-- Dado un board, devuelve una lista de booleanos que indica que columnas tienen 2 o mas espacios libres.
 columnas2Espacios board = map (>= 2) (map (columnasEspacios 0) (map reverse (transpose board))) 
 
 puedeGanarEnOtraJugada :: Bool -> [[[[Char]]]] -> [Bool]
+-- Dado un jugador y una serie de tableros, indica en cual de estos tableros el jugador puede ganar poniendo una sola ficha
 puedeGanarEnOtraJugada _ [] = []
 puedeGanarEnOtraJugada isPlayer (b:bs)
     |isPlayer = 
         [foldl (||) (False) (map (comprobarWin True) (map (ponerFicha True b ) (validPositions  b)))] ++ puedeGanarEnOtraJugada isPlayer bs
     |otherwise = []
 
--- rayaImparable :: Int -> Bool -> [[Char]] -> Int
---Funcion que indica la longitud de una raya empezando en una posicion concreta en adelante para el jugador isPlayer
-rayaImparable n _ [] = n 
-rayaImparable n isPlayer (f:fs)
+contadorFichas :: Int -> Bool -> [[Char]] -> Int
+--Funcion que indica la longitud de una raya empezando en una posicion concreta en adelante para el jugador dado.
+contadorFichas n _ [] = n 
+contadorFichas n isPlayer (f:fs)
     |isPlayer = 
         if f == "O"  then 
-            rayaImparable (n+1) isPlayer fs
+            contadorFichas (n+1) isPlayer fs
         else n
     |not isPlayer = 
         if f == "X"  then 
-            rayaImparable (n+1) isPlayer fs
+            contadorFichas (n+1) isPlayer fs
         else n
     |otherwise = n
 
--- potencial3enRayaH :: Bool -> [[[Char]]] -> [Int] -> [Bool]
+potencial3enRayaH :: Bool -> [[[Char]]] -> [Int] -> [Bool]
+-- Dada una lista de lineas, una lista de posiciones y un jugador. Recorriendo ambas listas simultaniamente, 
+-- indica si el tamaño de la raya que forma el jugador en esa linea a partir de esa posicion es mayor o igual que 3
 potencial3enRayaH _ [] _ = []
-potencial3enRayaH isPlayer (f:fs) (p:ps) = (rayaImparable 0 isPlayer (drop (p) f) + rayaImparable 0 isPlayer (drop ((length f) - p) (reverse f)) >= 3)
+potencial3enRayaH isPlayer (f:fs) (p:ps) = (contadorFichas 0 isPlayer (drop (p) f) + contadorFichas 0 isPlayer (drop ((length f) - p) (reverse f)) >= 3)
                                         : potencial3enRayaH isPlayer fs ps
 
 estrategia2 :: [[[Char]]] -> Bool -> IO Int
+-- Funcion de la estrategia2 greedy. Detalles en la documentación
 estrategia2 board isPlayer = do
         if isPlayer then
             do
@@ -420,7 +433,7 @@ estrategia2 board isPlayer = do
         -- print sol2
         if any (True==) sol2 then
             do 
-            let posNextMove = posOfTrueMove sol2 0
+            let posNextMove = (posOfTrueArray 0 sol2) !! 0
             
             let nextMove = (bestOfbests !! posNextMove)
             -- let nboard = ponerFicha board nextMove t
@@ -439,11 +452,14 @@ estrategia2 board isPlayer = do
             -- putStrLn "venga dew"
             return (validPos !! (mejoresPosiciones !! randPos))
 
--- takeElementsOfLists _ [] = []
--- takeElementsOfLists (f:fs) (x:xs)
---     |x == 0 = [f] ++ takeElementsOfLists fs (map (-1) xs)
---     |otherwise = takeElementsOfLists fs (map (-1) (x:xs))
+
 greedy :: [[[Char]]] -> [Int] -> IO ([Int], Int)
+-- Funcion que dado un tablero y sus posiciones validas, devuelve
+-- una serie de posiciones validas que pueden estar repetidas indicando
+-- en que columnas se puede formar la raya mas grande para el bot,
+-- (las repeticiones se deben a que pueden formarse rayas diagonales, horizontales
+-- o verticales en el momento en el que se coloque la ficha en la posicion)
+-- y cual es la longitud de esa raya que se va a formar.
 greedy board validPos =
     do 
     -- let validPos = validPositions (transpose board)
@@ -466,52 +482,66 @@ greedy board validPos =
     -- print posDiagonales2s)
     -- print posHorizontales
     let maxGlobal = maximum (consecVerticales ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
-    let consecutivosFiltrado = map (maxPos maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
+    let consecutivosFiltrado = map (posicionValorEnLista maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
     let mejoresPosiciones = uneListas consecutivosFiltrado
 
     return ((mejoresPosiciones, maxGlobal))
 
 comprobarWin :: Bool -> [[[Char]]] -> Bool
-comprobarWin t board = checkHorizontal board t || checkVertical board t || checkDiagonals board t
+-- Funcion que dado un jugador y un tablero, confirma si el jugador ha ganado en ese tablero
+comprobarWin isPlayer board = checkHorizontal board isPlayer || checkVertical board isPlayer || checkDiagonals board isPlayer
 
 posDiferencia :: [[Char]] -> [[Char]] -> Int -> Int
+-- Funcion que dada dos listas diferentes, te devuelve en que posicion son diferentes
 posDiferencia (b1:b1s) (b2:b2s) pos
     |b1 /= b2 = pos
     |otherwise = posDiferencia b1s b2s (pos+1)
     
 diagonalDiferente :: [[[Char]]] -> [[[Char]]] -> ([[Char]], Int)
+-- Dados 2 boards diferentes, devuelve la diagonal diferente del segundo, y a que altura del tablero se encuentra esta posicion.
 diagonalDiferente board1 board2 = ((diagonals board2) !! x, posDiferencia ((diagonals board1) !! x) ((diagonals board2) !! x) 0)
-    where x = (posOfFalse (zipWith (==) (diagonals board1) (diagonals board2)) 0)
+    where x = ((posOfFalseArray 0 (zipWith (==) (diagonals board1) (diagonals board2))) !! 0)
 
 posiblesDiagonales :: [[[Char]]] -> [Int] -> Bool -> [([[Char]], Int)]
+-- Dado un board, sus posiciones validas, y un booleano que indica si invertir o no el board,
+-- devuelve una lista de parejas, primero de aquellas diagonales que se forman al poner una ficha en
+-- el board dado, y en cada posicion valida, y segundo, la altura a la que esta la nueva ficha colocada.
+-- Si invertida es True, entonces antes de hacer todo lo mencionado anteriormente, se girara el tablero 
+-- para trabajar con las diagonales inversas.
 posiblesDiagonales _ [] _ = []
 posiblesDiagonales board (p:ps) invertida 
     |not invertida = (diagonalDiferente board (ponerFicha False board p)) : posiblesDiagonales board ps invertida
     |otherwise = (diagonalDiferente (map reverse board) (map reverse (ponerFicha False board p))) : posiblesDiagonales board ps invertida
 
-
-posOfTrueMove :: [Bool] -> Int -> Int
-posOfTrueMove [] pos = pos
-posOfTrueMove (f:fs) pos
-    |f = pos
-    |otherwise = posOfTrueMove fs (pos+1)
-
+posOfFalseArray :: Int -> [Bool] -> [Int]
+-- Dada una lista y un numero que indica la posicion en esta lista, deuelve una nueva lista que contiene
+-- las posiciones de aquellos valores a False en la lista dada inicialmente
 posOfFalseArray pos [] = []
 posOfFalseArray pos (a:as)
-    |not a = [pos] ++ posOfFalseArray (pos+1) as
-    |otherwise = posOfFalseArray (pos+1) as
+    |not a = [pos] ++ posOfFalseArray (pos + 1) as
+    |otherwise = posOfFalseArray (pos + 1) as
 
-posOfFalse :: [Bool] -> Int -> Int
-posOfFalse [] pos = pos
-posOfFalse (f:fs) pos
-    |not f = pos
-    |otherwise = posOfFalse fs (pos+1)
+posOfTrueArray :: Int -> [Bool] -> [Int]
+-- Dada una lista y un numero que indica la posicion en esta lista, deuelve una nueva lista que contiene
+-- las posiciones de aquellos valores a True en la lista dada inicialmente
+posOfTrueArray _ [] = []
+posOfTrueArray pos (a:as)
+    |a = [pos] ++ posOfTrueArray (pos + 1) as
+    |otherwise = posOfTrueArray (pos + 1) as 
+
+-- posOfFalse :: [Bool] -> Int -> Int
+-- posOfFalse [] pos = pos
+-- posOfFalse (f:fs) pos
+--     |not f = pos
+--     |otherwise = posOfFalse fs (pos+1)
 
 uneListas :: [[Int]] -> [Int]
+-- Funcion que une un conjuento de listas separadas.
 uneListas (x:[]) = x
 uneListas (x:xs) = x ++ uneListas xs
 
 elementosUnicos :: [Int] -> [Int]
+-- Funcion que ordena una lista y devuelve los mismos elementos sin repeticiones.
 elementosUnicos xs = borrar $ sort xs
   where
     borrar []  = []
@@ -543,68 +573,40 @@ posiblesColumnas _ [] _ = []
 posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha isPlayer board p ))) !! p)) : posiblesColumnas board ps isPlayer
 
 -- posiblesHorizontales :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
+-- Dado un board, sus posiciones validas, y un jugador, 
 posiblesHorizontales     _ [] _ = []
-posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalVacia p 0 (ponerFicha isPlayer board p )) : posiblesHorizontales board ps isPlayer
+posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalConValor p 0 (ponerFicha isPlayer board p )) : posiblesHorizontales board ps isPlayer
 
--- cogerUltimaHorizontalVacia :: Int -> [[[Char]]] -> [[Char]]
-cogerUltimaHorizontalVacia _ hori (f:[]) = (f, hori)
-cogerUltimaHorizontalVacia pos hori (f:fs) 
+cogerUltimaHorizontalConValor :: Int -> Int -> [[[Char]]] -> ([[Char]], Int)
+-- Funcion que dada una posicion y un tablero, devuelve una pareja: la horizontal no vacia que este mas arriba en el
+-- tablero en la posicion dada, y a que altura está.
+cogerUltimaHorizontalConValor _ hori (f:[]) = (f, hori)
+cogerUltimaHorizontalConValor pos hori (f:fs) 
     |(head fs) !! pos == "_" = (f, hori)
-    |otherwise = cogerUltimaHorizontalVacia pos (hori+1) fs
+    |otherwise = cogerUltimaHorizontalConValor pos (hori+1) fs
 
-maxPos :: Int -> Int -> [Int] -> [Int]
-maxPos _  _ []  = []
-maxPos max pos (a:as)
-    |a == max = [pos] ++ maxPos max (pos+1) as
-    |otherwise = maxPos max (pos + 1) as
+posicionValorEnLista :: Int -> Int -> [Int] -> [Int]
+-- Dado una lista y un valor, devuelve una nueva lista indicando en que posiciones de la lista anterior
+-- se encuentra dicho valor.
+posicionValorEnLista _  _ []  = []
+posicionValorEnLista valor pos (a:as)
+    |a == valor = [pos] ++ posicionValorEnLista valor (pos+1) as
+    |otherwise = posicionValorEnLista valor (pos + 1) as
 
-
+validPositions :: [[[Char]]] -> [Int]
+-- Funcion que devuelve la posicion de aquellas columnas en las que se puede poner una ficha dado un cierto board
 validPositions board = validPositions' (transpose board)
 
-
 validPositions' :: [[[Char]]] -> [Int]
-validPositions' board = posOfTrue (map (any ("_"==)) board) 0
+-- Funcion auxiliar de validPositions que ayuda a conseguir las posiciones validas
+validPositions' board = posOfTrueArray 0 (map (any ("_"==)) board) 
 
 
 
--- maximasOcurrencias  _ _ max [] = max
--- maximasOcurrencias isPlayer count max (f:fs)
---     |isPlayer = 
---         if f == "O" then
---             if max < (count + 1) then
---                 maximasOcurrencias isPlayer (count+1) (max+1) fs
---             else 
---                 maximasOcurrencias isPlayer (count+1) max fs
 
---         else 
---             maximasOcurrencias isPlayer 0 max fs
-            
---     |not isPlayer = 
---         if f == "X" then
---             if max < (count + 1) then
---                 maximasOcurrencias isPlayer (count+1) (max+1) fs
---             else 
---                 maximasOcurrencias isPlayer (count+1) max fs
-
---         else 
---             maximasOcurrencias isPlayer 0 max fs
-
--- -- valoresMaximos :: [[[Char]]] -> [[Int]]
--- valoresMaximos [] = []
--- valoresMaximos (b:bs) = (map (maximasOcurrencias False 0 0) b ++ map (maximasOcurrencias False 0 0) (transpose b)
---                         ++ map (maximasOcurrencias False 0 0) (diagonals (transpose b))
---                         ++ map (maximasOcurrencias False 0 0) (diagonals (map reverse (transpose b))) )
---                         : valoresMaximos bs
-
--- boardsPosibles _ [] _ = []
--- boardsPosibles board (p:ps) isPlayer = (ponerFicha board p isPlayer) : boardsPosibles board ps isPlayer
-posOfTrue ::[Bool] -> Int -> [Int]
-posOfTrue [] _ = []
-posOfTrue (x:xs) y
-    |x = y : posOfTrue xs (y+1)
-    |otherwise = posOfTrue xs (y+1)
 
 diagonals :: [[[Char]]] -> [[[Char]]]
+--Funcion que dada una lista de listas rectangular, devuelve sus diagonales como lista de listas
 diagonals []       = []
 diagonals ([]:xs) = xs
 diagonals x      = zipWith (++) (map ((:[]) . head) x ++ repeat [])
@@ -612,19 +614,24 @@ diagonals x      = zipWith (++) (map ((:[]) . head) x ++ repeat [])
 
 
 transpose :: [[[Char]]] -> [[[Char]]]
+--Funcion que dada una lista de listas rectangular, devuelve su transpuesta
 transpose ([]:_) = []
-transpose x = (map head x) : transpose (map tail x)
+transpose b = (map head b) : transpose (map tail b)
 
 checkDiagonals :: [[[Char]]] -> Bool -> Bool
+-- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por las diagonales del tablero
 checkDiagonals board isPlayer = checkHorizontal (diagonals board)  isPlayer || checkHorizontal (diagonals (map reverse board)) isPlayer
 
 checkVertical :: [[[Char]]] -> Bool -> Bool
+-- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por las verticales del tablero
 checkVertical board isPlayer = checkHorizontal (transpose board) isPlayer
 
 checkHorizontal :: [[[Char]]] -> Bool -> Bool
+-- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por las horizontales del tablero
 checkHorizontal board isPlayer = foldl (||) (False) (map (confirmWin isPlayer 0) board)
 
 confirmWin :: Bool -> Int -> [[Char]] -> Bool
+-- Funcion que dada una lista, y un jugador, indica si el jugador tiene 4 fichas consecutivas en la lista.
 confirmWin isPlayer 4 _ = True
 confirmWin isPlayer fichasSeguidas [] = False
 confirmWin isPlayer fichasSeguidas (f:fs) 
@@ -643,6 +650,7 @@ confirmWin isPlayer fichasSeguidas (f:fs)
 
 
 sort :: [Int] -> [Int]
+-- Funcion que ordena una lista de enteros.
 sort [] = []
 sort [x] = [x]
 sort (x:xs) = (sort menors) ++ [x] ++ (sort majors)
