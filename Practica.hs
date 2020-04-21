@@ -380,17 +380,17 @@ puedeGanarEnOtraJugada isPlayer (b:bs)
         [foldl (||) (False) (map (comprobarWin True) (map (ponerFicha True b ) (validPositions  b)))] ++ puedeGanarEnOtraJugada isPlayer bs
     |otherwise = []
 
-contadorFichas :: Int -> Bool -> [[Char]] -> Int
+contarFichasConsecutivas :: Int -> Bool -> [[Char]] -> Int
 --Funcion que indica la longitud de una raya empezando en una posicion concreta en adelante para el jugador dado.
-contadorFichas n _ [] = n 
-contadorFichas n isPlayer (f:fs)
+contarFichasConsecutivas n _ [] = n 
+contarFichasConsecutivas n isPlayer (f:fs)
     |isPlayer = 
         if f == "O"  then 
-            contadorFichas (n+1) isPlayer fs
+            contarFichasConsecutivas (n+1) isPlayer fs
         else n
     |not isPlayer = 
         if f == "X"  then 
-            contadorFichas (n+1) isPlayer fs
+            contarFichasConsecutivas (n+1) isPlayer fs
         else n
     |otherwise = n
 
@@ -398,7 +398,7 @@ potencial3enRayaH :: Bool -> [[[Char]]] -> [Int] -> [Bool]
 -- Dada una lista de lineas, una lista de posiciones y un jugador. Recorriendo ambas listas simultaniamente, 
 -- indica si el tamaño de la raya que forma el jugador en esa linea a partir de esa posicion es mayor o igual que 3
 potencial3enRayaH _ [] _ = []
-potencial3enRayaH isPlayer (f:fs) (p:ps) = (contadorFichas 0 isPlayer (drop (p) f) + contadorFichas 0 isPlayer (drop ((length f) - p) (reverse f)) >= 3)
+potencial3enRayaH isPlayer (f:fs) (p:ps) = (contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f)) >= 3)
                                         : potencial3enRayaH isPlayer fs ps
 
 estrategia2 :: [[[Char]]] -> Bool -> IO Int
@@ -542,30 +542,17 @@ uneListas (x:xs) = x ++ uneListas xs
 
 elementosUnicos :: [Int] -> [Int]
 -- Funcion que ordena una lista y devuelve los mismos elementos sin repeticiones.
-elementosUnicos xs = borrar $ sort xs
+elementosUnicos xs = eliminaRepeticiones $ sort xs
   where
-    borrar []  = []
-    borrar [x] = [x]
-    borrar (x1:x2:xs)
-      | x1 == x2  = borrar (x1:xs)
-      | otherwise = x1 : borrar (x2:xs)
+    eliminaRepeticiones []  = []
+    eliminaRepeticiones [x] = [x]
+    eliminaRepeticiones (x1:x2:xs)
+      | x1 == x2  = eliminaRepeticiones (x1:xs)
+      | otherwise = x1 : eliminaRepeticiones (x2:xs)
 
-analizaHorizontal :: Int -> Bool -> [[Char]] -> Int
-analizaHorizontal n _ [] = n
-analizaHorizontal n isPlayer (f:fs)
-    |isPlayer = 
-        if f == "O" then 
-            analizaHorizontal (n+1) isPlayer fs
-        else n
-    |not isPlayer = 
-        if f == "X" then 
-            analizaHorizontal (n+1) isPlayer fs
-        else n
-    |otherwise = n
-
-consecutivosHorizontales  :: Bool -> [[[Char]]] -> [Int] -> [Int]
+consecutivosHorizontales :: Bool -> [[[Char]]] -> [Int] -> [Int]
 consecutivosHorizontales _ [] _ = []
-consecutivosHorizontales isPlayer (f:fs) (p:ps) = analizaHorizontal 0 isPlayer (drop (p) f) + analizaHorizontal 0 isPlayer (drop ((length f) - p) (reverse f))
+consecutivosHorizontales isPlayer (f:fs) (p:ps) = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
                                         : consecutivosHorizontales isPlayer fs ps
 
 posiblesColumnas :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
@@ -619,15 +606,15 @@ transpose ([]:_) = []
 transpose b = (map head b) : transpose (map tail b)
 
 checkDiagonals :: [[[Char]]] -> Bool -> Bool
--- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por las diagonales del tablero
+-- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna de las diagonales del tablero.
 checkDiagonals board isPlayer = checkHorizontal (diagonals board)  isPlayer || checkHorizontal (diagonals (map reverse board)) isPlayer
 
 checkVertical :: [[[Char]]] -> Bool -> Bool
--- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por las verticales del tablero
+-- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna vertical del tablero.
 checkVertical board isPlayer = checkHorizontal (transpose board) isPlayer
 
 checkHorizontal :: [[[Char]]] -> Bool -> Bool
--- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por las horizontales del tablero
+-- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna horizontal del tablero.
 checkHorizontal board isPlayer = foldl (||) (False) (map (confirmWin isPlayer 0) board)
 
 confirmWin :: Bool -> Int -> [[Char]] -> Bool
@@ -650,7 +637,7 @@ confirmWin isPlayer fichasSeguidas (f:fs)
 
 
 sort :: [Int] -> [Int]
--- Funcion que ordena una lista de enteros.
+-- Funcion que ordena una lista de enteros de menor a mayor.
 sort [] = []
 sort [x] = [x]
 sort (x:xs) = (sort menors) ++ [x] ++ (sort majors)
