@@ -1,5 +1,5 @@
 # Cuatro en raya
-Practica para la asignatura LP que sustituye el examen.
+Práctica para la asignatura LP de la FIB que sustituye el examen parcial en el Q2 2019-2020. [Enunciat de la pràctica](https://github.com/jordi-petit/lp-quatre-en-ratlla)
 
 La practica consiste en implementar el juego de mesa Cuatro en raya junto con 3 bots para el juego. 
 * El primero hace movimientos aleatorios.
@@ -100,4 +100,5 @@ en empate. En cualquiera de estos casos se mostrará un mensaje diciendo quien h
 ### Random
 El primer bot es bastante sencillo de explicar, coloca fichas aleatoriamente sobre posiciones validas del tablero.
 ### Greedy
-Aqui tuve de dudas sobre como interpretar el enunciado. Lo que yo personalmente interpreté es que el bot tirará fichas alli en aquellas posiciones que le permita hacer la raya mas grande posible, si se da el caso de que una de estas posiciones puede evitar que el usuario haga un 4 en raya, entonces el bot tirará alli. No intentará bloquear un 4 en raya del usuario si eso no le permite hacer la linea mas grande posible para él.  
+Aqui tuve de dudas sobre como interpretar el enunciado. Lo que yo comprendí es que el bot tirará fichas en aquellas posiciones que le permita hacer la raya mas grande posible, si ademas se da el caso de que una de estas posiciones puede evitar que el usuario haga un 4 en raya, entonces el bot tirará alli. El bot no intentará bloquear un 4 en raya del usuario si eso no le permite hacer la linea mas grande posible.
+### Smart
