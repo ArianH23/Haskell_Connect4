@@ -269,6 +269,8 @@ estrategia3 board isPlayer = do
 
                     let posiblesMovimientosCorrectos = sort (espacioUnico ++ posibles)
 
+                    print "xd"
+                    print posiblesMovimientosCorrectos
                     -- && length movimientosCorrectos /= (length espaciosDobles -1)
                     if length posiblesMovimientosCorrectos > 0 then
                         do
@@ -491,6 +493,32 @@ numerosXsoZero b f
     |b = length (dropWhile ("_"==) f)
     |otherwise = 0
 
+contarFichasConsecutivasYEspacios :: Int -> Bool -> [[Char]] -> Int
+contarFichasConsecutivasYEspacios n _ [] = n 
+contarFichasConsecutivasYEspacios n isPlayer (f:fs)
+    |isPlayer = 
+        if f == "O" || f == "_"  then 
+            contarFichasConsecutivasYEspacios (n+1) isPlayer fs
+        else n
+    |not isPlayer = 
+        if f == "X" || f == "_" then 
+            contarFichasConsecutivas (n+1) isPlayer fs
+        else n
+    |otherwise = n
+
+numeroXsoZeroHoriDia isPlayer f p = (contarFichasConsecutivasYEspacios 0 isPlayer (drop (p) f) + contarFichasConsecutivasYEspacios 0 isPlayer (drop ((length f) - p) (reverse f)) )>=4
+
+-- consecutivosHorizontales :: Bool -> [[[Char]]] -> [Int] -> [Int]
+-- consecutivosHorizontales _ [] _ = []
+-- consecutivosHorizontales isPlayer (f:fs) (p:ps) = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
+--                                         : consecutivosHorizontales isPlayer fs ps
+                   
+
+contarFichasGreedyM isPlayer b p f
+    | b = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
+    | otherwise = 0
+
+
 greedyMejorado :: [[[Char]]] -> [Int] -> IO ([Int], Int)
 -- Funcion que dado un tablero y sus posiciones validas, devuelve
 -- una serie de posiciones validas que pueden estar repetidas indicando
@@ -504,28 +532,44 @@ greedyMejorado board validPos =
         -- print validPos
     let posColumnas = (posiblesColumnasSinDrop board validPos False)
     let consecVerticales =  (map (length) (map (takeWhile (crossOrEmpty)) posColumnas))
-
     let posToConsider = map (>=4) consecVerticales
-
     let verticalesConPotencial = zipWith (numerosXsoZero) posToConsider posColumnas
 
+
+
     let posHorizontales = map (fst) (posiblesHorizontales board validPos False)
-    let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
+
+    let horizontalesAConsiderar = zipWith (numeroXsoZeroHoriDia False)  posHorizontales validPos
+
+    let horizontalesConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar validPos posHorizontales
+
+    -- let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
+
 
     let posDiagonales1 = posiblesDiagonales board validPos False
     let diag1 = map fst posDiagonales1
     let positions1 = map snd posDiagonales1
-    let consecDiagonales1 = (consecutivosHorizontales False diag1 positions1)
+
+    let diagonales1AConsiderar = zipWith (numeroXsoZeroHoriDia False)  diag1 positions1
+
+    let diagonales1ConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar positions1 diag1
+
+    -- let consecDiagonales1 = (consecutivosHorizontales False diag1 positions1)
 
     let posDiagonales2 = posiblesDiagonales board validPos True
     let diag2 = map fst posDiagonales2
     let positions2 = map snd posDiagonales2
-    let consecDiagonales2 = (consecutivosHorizontales False diag2 positions2)
+
+    let diagonales2AConsiderar = zipWith (numeroXsoZeroHoriDia False)  diag2 positions2
+
+    let diagonales2ConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar positions2 diag2
+
+    -- let consecDiagonales2 = (consecutivosHorizontales False diag2 positions2)
 
     -- print posDiagonales2s)
     -- print posHorizontales
-    let maxGlobal = maximum (verticalesConPotencial ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
-    let consecutivosFiltrado = map (posicionValorEnLista maxGlobal 0) ([verticalesConPotencial] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
+    let maxGlobal = maximum (verticalesConPotencial ++ horizontalesConPotencial ++ diagonales1ConPotencial ++ diagonales2ConPotencial)
+    let consecutivosFiltrado = map (posicionValorEnLista maxGlobal 0) ([verticalesConPotencial] ++ [horizontalesConPotencial] ++ [diagonales1ConPotencial] ++ [diagonales2ConPotencial])
     let mejoresPosiciones = uneListas consecutivosFiltrado
 
     return ((mejoresPosiciones, maxGlobal))
@@ -579,7 +623,7 @@ posOfTrueArray pos (a:as)
 --     |otherwise = posOfFalse fs (pos+1)
 
 uneListas :: [[Int]] -> [Int]
--- Funcion que une un conjuento de listas separadas.
+-- Funcion que une un conjunto de listas separadas.
 uneListas (x:[]) = x
 uneListas (x:xs) = x ++ uneListas xs
 
