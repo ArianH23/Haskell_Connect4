@@ -172,14 +172,14 @@ turnoJugador :: [[[Char]]] -> IO Int
 --Funcion que se encarga de pedir al jugador el numero de columna en el que poner la ficha, entre 1 y N.
 turnoJugador board = do
     let columnas = (length (head board))
-    putStrLn ("Elige donde quieres poner la ficha entre el 1 y el " ++ show columnas ++ "\n")
+    putStrLn ("Elige en que columna quieres poner la ficha entre la 1 y la " ++ show columnas ++ "\n")
     columnaE <- getLine
     -- print (head b)
     let validPos = map (+1) (validPositions board)
 
     if not (any ((read columnaE :: Int)==) validPos) then
         do
-        putStrLn("Posición inválida\n")
+        putStrLn("\nPosición inválida\n")
         turnoJugador board
     
     else
