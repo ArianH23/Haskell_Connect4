@@ -275,7 +275,8 @@ estrategia3 board isPlayer = do
                     if length posiblesMovimientosCorrectos > 0 then
                         do
                             --------------------------------------------
-                        
+                        print "hahah"
+                        print posiblesMovimientosCorrectos
                         let horiJugador = map fst (posiblesHorizontales board posiblesMovimientosCorrectos True)
                         print (posiblesHorizontales board posiblesMovimientosCorrectos True)
                         -- print 4
@@ -490,7 +491,7 @@ crossOrEmpty a = a =="X" || "_" == a
 
 numerosXsoZero :: Bool -> [[Char]] -> Int
 numerosXsoZero b f 
-    |b = length (dropWhile ("_"==) f)
+    |b = length (takeWhile ("X"==) (dropWhile ("_"==) f))
     |otherwise = 0
 
 contarFichasConsecutivasYEspacios :: Int -> Bool -> [[Char]] -> Int
@@ -502,12 +503,12 @@ contarFichasConsecutivasYEspacios n isPlayer (f:fs)
         else n
     |not isPlayer = 
         if f == "X" || f == "_" then 
-            contarFichasConsecutivas (n+1) isPlayer fs
+            contarFichasConsecutivasYEspacios (n+1) isPlayer fs
         else n
     |otherwise = n
 
 numeroXsoZeroHoriDia isPlayer f p = (contarFichasConsecutivasYEspacios 0 isPlayer (drop (p) f) + contarFichasConsecutivasYEspacios 0 isPlayer (drop ((length f) - p) (reverse f)) )>=4
-
+numeroXsoZeroHoriDiaCount  isPlayer f p = (contarFichasConsecutivasYEspacios 0 isPlayer (drop (p) f) + contarFichasConsecutivasYEspacios 0 isPlayer (drop ((length f) - p) (reverse f)) )
 -- consecutivosHorizontales :: Bool -> [[[Char]]] -> [Int] -> [Int]
 -- consecutivosHorizontales _ [] _ = []
 -- consecutivosHorizontales isPlayer (f:fs) (p:ps) = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
@@ -530,21 +531,28 @@ greedyMejorado board validPos =
     do 
     -- let validPos = validPositions (transpose board)
         -- print validPos
+    -- print "verti"
     let posColumnas = (posiblesColumnasSinDrop board validPos False)
     let consecVerticales =  (map (length) (map (takeWhile (crossOrEmpty)) posColumnas))
     let posToConsider = map (>=4) consecVerticales
     let verticalesConPotencial = zipWith (numerosXsoZero) posToConsider posColumnas
 
+    -- print verticalesConPotencial
 
+    print "hori"
 
     let posHorizontales = map (fst) (posiblesHorizontales board validPos False)
-
+    print posHorizontales
     let horizontalesAConsiderar = zipWith (numeroXsoZeroHoriDia False)  posHorizontales validPos
+    print horizontalesAConsiderar
+    print (zipWith (numeroXsoZeroHoriDiaCount False) posHorizontales validPos)
 
     let horizontalesConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar validPos posHorizontales
+    print horizontalesConPotencial
 
     -- let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
 
+    -- print horizontalesConPotencial
 
     let posDiagonales1 = posiblesDiagonales board validPos False
     let diag1 = map fst posDiagonales1
@@ -572,6 +580,10 @@ greedyMejorado board validPos =
     let consecutivosFiltrado = map (posicionValorEnLista maxGlobal 0) ([verticalesConPotencial] ++ [horizontalesConPotencial] ++ [diagonales1ConPotencial] ++ [diagonales2ConPotencial])
     let mejoresPosiciones = uneListas consecutivosFiltrado
 
+    print "Kappas"
+    print maxGlobal
+    print consecutivosFiltrado
+    print mejoresPosiciones
     return ((mejoresPosiciones, maxGlobal))
     
 comprobarWin :: Bool -> [[[Char]]] -> Bool

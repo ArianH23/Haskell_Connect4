@@ -1,5 +1,5 @@
 # Cuatro en raya
-Práctica para la asignatura LP de la FIB que sustituye el examen parcial en el Q2 2019-2020. [Enunciat de la pràctica](https://github.com/jordi-petit/lp-quatre-en-ratlla)
+Práctica para la asignatura LP de la FIB que sustituye el examen parcial de Haskell en el Q2 2019-2020. [Enunciat de la pràctica](https://github.com/jordi-petit/lp-quatre-en-ratlla)
 
 La practica consiste en implementar el juego de mesa Cuatro en raya junto con 3 bots para el juego. 
 * El primero hace movimientos aleatorios.
