@@ -297,7 +297,7 @@ estrategia3 board isPlayer = do
                             let a = posOfTrueArray 0 puedeGanarsiHaceestemov
                             -- print a
                             -- let b = movimientos3H !! (a!!0)
-                            let c = posiblesMovimientosCorrectos !! (a !! 0)
+                            let c = posiblesMovimientosCorrectos !! (a !! ((length a) `div` 2))
                             -- print ( "estoy en 3 h y devuelvo" ++show c)
                             print a
                             -- print b
