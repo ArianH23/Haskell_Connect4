@@ -102,3 +102,7 @@ El primer bot es bastante sencillo de explicar, coloca fichas aleatoriamente sob
 ### Greedy
 Aqui tuve de dudas sobre como interpretar el enunciado. Lo que yo comprendí es que el bot tirará fichas en aquellas posiciones que le permita hacer la raya mas grande posible, si ademas se da el caso de que una de estas posiciones puede evitar que el usuario haga un 4 en raya, entonces el bot tirará alli. El bot no intentará bloquear un 4 en raya del usuario si eso no le permite hacer la linea mas grande posible.
 ### Smart
+El bot smart tiene escondida una estrategia greedy mejorada respecto a la del bot anterior. Pero antes mencionemos sus prioridades:
+* Si el bot puede ganar con algún movimiento válido, hará ese movimiento.
+* Si el usuario puede ganar con algun movimiento válido, el bot intentará bloquear ese movimiento.
+* Si se da la situación en la que hay una columna en la que si el usuario pone una ficha, y si seguidamente el bot pusiera una ficha sobre esa misma columna pudiese darle la victoria, el bot evitará poner una ficha en la columna. El bot hará lo mismo si se da el caso de que el usuario puede ganar poniendo una ficha en una columna si el bot pone antes coloca una ficha en esa columna.

@@ -269,14 +269,12 @@ estrategia3 board isPlayer = do
 
                     let posiblesMovimientosCorrectos = sort (espacioUnico ++ posibles)
 
-                    print "xd"
                     print posiblesMovimientosCorrectos
                     -- && length movimientosCorrectos /= (length espaciosDobles -1)
                     if length posiblesMovimientosCorrectos > 0 then
                         do
                             --------------------------------------------
-                        print "hahah"
-                        print posiblesMovimientosCorrectos
+
                         let horiJugador = map fst (posiblesHorizontales board posiblesMovimientosCorrectos True)
                         print (posiblesHorizontales board posiblesMovimientosCorrectos True)
                         -- print 4
@@ -507,12 +505,8 @@ contarFichasConsecutivasYEspacios n isPlayer (f:fs)
         else n
     |otherwise = n
 
+
 numeroXsoZeroHoriDia isPlayer f p = (contarFichasConsecutivasYEspacios 0 isPlayer (drop (p) f) + contarFichasConsecutivasYEspacios 0 isPlayer (drop ((length f) - p) (reverse f)) )>=4
-numeroXsoZeroHoriDiaCount  isPlayer f p = (contarFichasConsecutivasYEspacios 0 isPlayer (drop (p) f) + contarFichasConsecutivasYEspacios 0 isPlayer (drop ((length f) - p) (reverse f)) )
--- consecutivosHorizontales :: Bool -> [[[Char]]] -> [Int] -> [Int]
--- consecutivosHorizontales _ [] _ = []
--- consecutivosHorizontales isPlayer (f:fs) (p:ps) = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
---                                         : consecutivosHorizontales isPlayer fs ps
                    
 
 contarFichasGreedyM isPlayer b p f
@@ -545,7 +539,6 @@ greedyMejorado board validPos =
     print posHorizontales
     let horizontalesAConsiderar = zipWith (numeroXsoZeroHoriDia False)  posHorizontales validPos
     print horizontalesAConsiderar
-    print (zipWith (numeroXsoZeroHoriDiaCount False) posHorizontales validPos)
 
     let horizontalesConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar validPos posHorizontales
     print horizontalesConPotencial
