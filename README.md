@@ -105,4 +105,17 @@ Aqui tuve de dudas sobre como interpretar el enunciado. Lo que yo comprendí es 
 El bot smart tiene escondida una estrategia greedy mejorada respecto a la del bot anterior. Pero antes mencionemos sus prioridades:
 * Si el bot puede ganar con algún movimiento válido, hará ese movimiento.
 * Si el usuario puede ganar con algun movimiento válido, el bot intentará bloquear ese movimiento.
-* Si se da la situación en la que hay una columna en la que si el usuario pone una ficha, y si seguidamente el bot pusiera una ficha sobre esa misma columna pudiese darle la victoria, el bot evitará poner una ficha en la columna. El bot hará lo mismo si se da el caso de que el usuario puede ganar poniendo una ficha en una columna si el bot pone antes coloca una ficha en esa columna.
+  
+A partir de aqui, empieza a priorizar movimientos dependiendo de las circustamcias del tablero.
+
+* Si se da la situación en la que hay una columna en la que si el usuario pone una ficha, y si seguidamente el bot pusiera una ficha sobre esa misma columna pudiese darle la victoria, el bot evitará poner una ficha en la columna. El bot hará lo mismo si se da el caso de que el usuario puede ganar poniendo una ficha en una columna si el bot pone antes coloca una ficha en esa columna. <br> A continuación se muestran los ejemplos mencionados, en ambos casos, el bot evitará poner una ficha en la columna 4 durante el resto de la partida a no ser que el usuario ponga una ficha alli antes.
+  ```
+    |_|_|_|_|_|_|_|     |_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|     |_|_|_|_|_|_|_|
+    |_|_|_|_|_|_|_|     |_|_|_|_|_|_|_|
+    |_|X|_|_|_|_|_|     |_|O|_|_|_|_|_|
+    |O|O|O|_|_|_|_|     |X|X|X|_|_|_|_|
+    |X|O|X|_|_|_|_|     |O|X|O|_|_|_|_|
+  ```
+  Las
+* Si existe la posibilidad de que el usuario pueda conseguir un 4 en raya haciendo dos movimientos, el bot hará aquel movimiento que le permita al usuario empezar el 4 en raya.

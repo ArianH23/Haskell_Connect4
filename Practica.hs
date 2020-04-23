@@ -91,7 +91,7 @@ escogerDimensiones = do
 
 main :: IO ()
 main = do 
-    (n,m) <- escogerDimensiones
+    (n, m) <- escogerDimensiones
     let b = createBoard n m
     putStrLn ""
     muestraBoard b
@@ -174,7 +174,6 @@ turnoJugador board = do
     let columnas = (length (head board))
     putStrLn ("Elige en que columna quieres poner la ficha entre la 1 y la " ++ show columnas ++ "\n")
     columnaE <- getLine
-    -- print (head b)
     let validPos = map (+1) (validPositions board)
 
     if not (any ((read columnaE :: Int)==) validPos) then
@@ -197,9 +196,7 @@ estrategia1 board isPlayer = do
         let validPos = validPositions board
         posrandom <- (randInt 0 ((length validPos) - 1))
         let posicionNuevaFicha = validPos !! posrandom
-        -- putStrLn ("El bot ha colocado ficha en la posicion " ++ (show (posicionNuevaFicha+1) )++ "\n")
-        -- let nboard = ponerFicha board posicionNuevaFicha t
-        -- muestraBoard nboard
+
         return(posrandom)
 
 
@@ -221,25 +218,21 @@ estrategia3 board isPlayer = do
             if maxGlobal == 4 then
                 do  -- Comprueba si puedes ganar, en tal caso, se hace alguna de las posibles jugadas ganadoras
                     randWinningPos <- randInt 0 ((length mejoresPosiciones) - 1)
-                    -- print mejoresPosiciones
-                    -- print ( "Voy a ganar y devuelvo" ++show (mejoresPosiciones !! randPos))
+
 
                     return (validPos !! (mejoresPosiciones !! randWinningPos))
             
             else
 
                 do  --Comprueba si el jugador puede ganar y bloquea esa jugada si es posible
-                -- print 1
                 let posiblesMovimientosJugador = map (ponerFicha True board ) (validPos) --- Boards posibles del jugador
-                -- print (sol)
-                -- print 2
+
                 let jugadaGanadoraJugador = map (comprobarWin True) posiblesMovimientosJugador
-                -- print sol2
+
                 if any (True==) jugadaGanadoraJugador then
                     do 
                     let posNextMove = (posOfTrueArray 0 jugadaGanadoraJugador) !! 0
                     let movimientoBloqueador = validPos !! posNextMove
-                    -- print ( "estoy en movimientoBloqueador y devuelvo" ++show movimientoBloqueador)
 
                     return (movimientoBloqueador)
                 
@@ -248,8 +241,7 @@ estrategia3 board isPlayer = do
                     --Si hay alguna columna por la que el jugador pueda ganar si el bot tira alli, el bot evitara tirar alli
 
                     do
-                    let espaciosDobles = posOfTrueArray 0 (columnas2Espacios board)
-                    -- print espaciosDobles
+                    let espaciosDobles = posOfTrueArray 0 (columnas2EspaciosOMas board)
                     let espacioUnico = posOfTrueArray 0 (columna1Espacio board)
 
                     let tableroSiJuegaBot = map (ponerFicha False board ) (espaciosDobles)
@@ -269,19 +261,13 @@ estrategia3 board isPlayer = do
 
                     let posiblesMovimientosCorrectos = sort (espacioUnico ++ posibles)
 
-                    print posiblesMovimientosCorrectos
-                    -- && length movimientosCorrectos /= (length espaciosDobles -1)
                     if length posiblesMovimientosCorrectos > 0 then
                         do
                             --------------------------------------------
 
-                        let horiJugador = map fst (posiblesHorizontales board posiblesMovimientosCorrectos True)
-                        print (posiblesHorizontales board posiblesMovimientosCorrectos True)
-                        -- print 4
+                        let horiJugador =  (map (posiblesHorizontales True board) posiblesMovimientosCorrectos )
 
                         let dondepuedejugaroponente = (map (ponerFicha True board) posiblesMovimientosCorrectos)
-
-                        -- let finalizar = zipWith (ponerFicha True) dondepuedejugaroponente (map (validPositions) (map (transpose) dondepuedejugaroponente))
 
                         let puedeGanarsiHaceestemov = puedeGanarEnOtraJugada True dondepuedejugaroponente 
 
@@ -290,16 +276,11 @@ estrategia3 board isPlayer = do
 
                         if any (True==) puedeGanarsiHaceestemov then
                             do
-                            print posiblesMovimientosCorrectos
-                            -- print "hola3"
+
                             let a = posOfTrueArray 0 puedeGanarsiHaceestemov
-                            -- print a
-                            -- let b = movimientos3H !! (a!!0)
+
                             let c = posiblesMovimientosCorrectos !! (a !! ((length a) `div` 2))
-                            -- print ( "estoy en 3 h y devuelvo" ++show c)
-                            print a
-                            -- print b
-                            print c
+
                             return (c)
 
                         else
@@ -314,42 +295,29 @@ estrategia3 board isPlayer = do
 
 
                     else
-                        --Comprueba si en 2 movimientos puede ganar el jugador si no intento bloquear nada
+                        --Comprueba si en 2 movimientos puede ganar el usuario en horizontal si no intento bloquear nada
                         
                         do
-                        let horiJugador = map fst (posiblesHorizontales board validPos True)
-                        print (posiblesHorizontales board validPos True)
+                        let horiJugador = (map (posiblesHorizontales True board) validPos)
 
-                        -- print 4
                         let consecHoriJugador = potencial3enRayaH True horiJugador validPos
-                        -- print consecHoriJugador
-    ---Poner if por aqui de any==true
+
                         let movimientos3H = posOfTrueArray 0 consecHoriJugador
                         let boardsposible3H = map (posiblesMovimientosJugador !!) (movimientos3H)
     
-                        -- print "hola1"
                         let deboBloquear = puedeGanarEnOtraJugada True boardsposible3H
-                        -- print "hola2"
-                        -- print movimientos3H
-                        -- print boardsposible3H
-                        
-                        -- print deboBloquear
-                        -- print (posOfTrueArray deboBloquear 0)
+
                         if any (True==) deboBloquear then
                             do
-                            -- print "hola3"
                             let a = posOfTrueArray 0 deboBloquear
-                            -- print a
                             let b = movimientos3H !! (a !! 0)
                             let c = validPos !! b
-                            -- print ( "estoy en 3 h y devuelvo" ++show c)
                             return (c)
 
                         else
                             --No quedan mas opciones
                             do
                             let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
-                            -- print ( "estoy en predet h y devuelvo" ++show (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2))))
 
                             return (validPos!!(mejoresPosicionesU !! (((length mejoresPosicionesU) - 1) `div` 2)))
 
@@ -361,9 +329,9 @@ columnasEspacios num (b:bs)
     |otherwise = num
 
 
-columnas2Espacios :: [[[Char]]] -> [Bool]
+columnas2EspaciosOMas :: [[[Char]]] -> [Bool]
 -- Dado un board, devuelve una lista de booleanos que indica que columnas tienen 2 o mas espacios libres.
-columnas2Espacios board = map (>= 2) (map (columnasEspacios 0) (map reverse (transpose board))) 
+columnas2EspaciosOMas board = map (>= 2) (map (columnasEspacios 0) (map reverse (transpose board))) 
 
 columna1Espacio :: [[[Char]]] -> [Bool]
 -- Dado un board, devuelve una lista de booleanos que indica que columnas tienen 2 o mas espacios libres.
@@ -407,46 +375,27 @@ estrategia2 board isPlayer = do
             return (x)
         else
             do
-        -- print (map reverse (transpose board))
         let validPos = validPositions board
-        -- print validPos
         (mejoresPosiciones, maxGlobal) <- greedy board validPos
-        -- print (maxGlobal)
-        -- let (listaGreedyS, listaGreedyC)
-        -- print (posOfFalse (zipWith (==) (diagonals board) (diagonals (ponerFicha board 0 False))) 0)
-        -- print maxGlobal
-        -- -- print xd
-        -- print mejoresPosiciones
-        -- print "hi"
+
         randPos <- randInt 0 ((length mejoresPosiciones) - 1)
-        -- print validPos
-        -- print mejoresPosiciones
-        -- print (elementosUnicos mejoresPosiciones)
+        
         let mejoresPosicionesU = (elementosUnicos mejoresPosiciones)
         let bestOfbests = map (validPos !!) mejoresPosicionesU
         let sol = map (ponerFicha True board ) (bestOfbests)
-        -- print (sol)
+
         let sol2 = map (comprobarWin True) sol
-        -- print sol2
+
         if any (True==) sol2 then
             do 
             let posNextMove = (posOfTrueArray 0 sol2) !! 0
             
             let nextMove = (bestOfbests !! posNextMove)
-            -- let nboard = ponerFicha board nextMove t
-
-            -- muestraBoard nboard
-
-            -- putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((nextMove) + 1) ) ++ " :)\n")
+            
             return (nextMove)
-            -- if comprobarWin t nboard then
-            --     do
-
         else
             do
-            -- print posOfMax
-            -- putStrLn ("El bot ha colocado ficha en la posicion " ++ (show ((mejoresPosiciones !! randPos) + 1) ) ++ "\n")
-            -- putStrLn "venga dew"
+
             return (validPos !! (mejoresPosiciones !! randPos))
             
 
@@ -459,25 +408,22 @@ greedy :: [[[Char]]] -> [Int] -> IO ([Int], Int)
 -- y cual es la longitud de esa raya que se va a formar.
 greedy board validPos =
     do 
-    -- let validPos = validPositions (transpose board)
-        -- print validPos
-    let posColumnas = (posiblesColumnas board validPos False)
+        
+    let posColumnas = map (dropWhile ("_"==)) (posiblesColumnas board validPos False)
     let consecVerticales =  (map (length) (map (takeWhile ("X"==)) posColumnas))
-    let posHorizontales = map (fst) (posiblesHorizontales board validPos False)
-    let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
+    let posHorizontales = (map (posiblesHorizontales False board) validPos)
+    let consecHorizontales = contarFichasConsecutivosDadaPosicion False posHorizontales validPos
 
     let posDiagonales1 = posiblesDiagonales board validPos False
     let diag1 = map fst posDiagonales1
     let positions1 = map snd posDiagonales1
-    let consecDiagonales1 = (consecutivosHorizontales False diag1 positions1)
+    let consecDiagonales1 = (contarFichasConsecutivosDadaPosicion False diag1 positions1)
 
     let posDiagonales2 = posiblesDiagonales board validPos True
     let diag2 = map fst posDiagonales2
     let positions2 = map snd posDiagonales2
-    let consecDiagonales2 = (consecutivosHorizontales False diag2 positions2)
+    let consecDiagonales2 = (contarFichasConsecutivosDadaPosicion False diag2 positions2)
 
-    -- print posDiagonales2s)
-    -- print posHorizontales
     let maxGlobal = maximum (consecVerticales ++ consecHorizontales ++ consecDiagonales1 ++ consecDiagonales2)
     let consecutivosFiltrado = map (posicionValorEnLista maxGlobal 0) ([consecVerticales] ++ [consecHorizontales] ++ [consecDiagonales1] ++ [consecDiagonales2])
     let mejoresPosiciones = uneListas consecutivosFiltrado
@@ -485,6 +431,7 @@ greedy board validPos =
     return ((mejoresPosiciones, maxGlobal))
 
 crossOrEmpty :: [Char] -> Bool
+-- Funcion que dada un String, devuelve True si es "X" o "_". Devolverá False en caso contrario
 crossOrEmpty a = a =="X" || "_" == a
 
 numerosXsoZero :: Bool -> [[Char]] -> Int
@@ -492,23 +439,11 @@ numerosXsoZero b f
     |b = length (takeWhile ("X"==) (dropWhile ("_"==) f))
     |otherwise = 0
 
-contarFichasConsecutivasYEspacios :: Int -> Bool -> [[Char]] -> Int
-contarFichasConsecutivasYEspacios n _ [] = n 
-contarFichasConsecutivasYEspacios n isPlayer (f:fs)
-    |isPlayer = 
-        if f == "O" || f == "_"  then 
-            contarFichasConsecutivasYEspacios (n+1) isPlayer fs
-        else n
-    |not isPlayer = 
-        if f == "X" || f == "_" then 
-            contarFichasConsecutivasYEspacios (n+1) isPlayer fs
-        else n
-    |otherwise = n
 
-
-numeroXsoZeroHoriDia isPlayer f p = (contarFichasConsecutivasYEspacios 0 isPlayer (drop (p) f) + contarFichasConsecutivasYEspacios 0 isPlayer (drop ((length f) - p) (reverse f)) )>=4
+contarFichasConsecutivasYEspacios :: [[Char]] -> Int -> Bool
+contarFichasConsecutivasYEspacios f p = (length (takeWhile (crossOrEmpty) (drop (p) f)) + length (takeWhile (crossOrEmpty) (drop ((length f) - p) (reverse f)) ))>=4
                    
-
+contarFichasGreedyM :: Bool -> Bool -> Int -> [[Char]] -> Int
 contarFichasGreedyM isPlayer b p f
     | b = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
     | otherwise = 0
@@ -517,71 +452,45 @@ contarFichasGreedyM isPlayer b p f
 greedyMejorado :: [[[Char]]] -> [Int] -> IO ([Int], Int)
 -- Funcion que dado un tablero y sus posiciones validas, devuelve
 -- una serie de posiciones validas que pueden estar repetidas indicando
--- en que columnas se puede formar la raya mas grande para el bot,
--- (las repeticiones se deben a que pueden formarse rayas diagonales, horizontales
--- o verticales en el momento en el que se coloque la ficha en la posicion)
--- y cual es la longitud de esa raya que se va a formar.
+-- en que columnas se puede formar la raya mas grande para el bot, que ademas,
+-- ofrezca la posibilidad de que se pueda formar un 4 en raya en algun futuro,
+-- y cual es la longitud de esa raya que se puede formar.
 greedyMejorado board validPos =
     do 
-    -- let validPos = validPositions (transpose board)
-        -- print validPos
-    -- print "verti"
-    let posColumnas = (posiblesColumnasSinDrop board validPos False)
+
+    let posColumnas = (posiblesColumnas board validPos False)
     let consecVerticales =  (map (length) (map (takeWhile (crossOrEmpty)) posColumnas))
     let posToConsider = map (>=4) consecVerticales
     let verticalesConPotencial = zipWith (numerosXsoZero) posToConsider posColumnas
 
-    -- print verticalesConPotencial
-
-    print "hori"
-
-    let posHorizontales = map (fst) (posiblesHorizontales board validPos False)
-    print posHorizontales
-    let horizontalesAConsiderar = zipWith (numeroXsoZeroHoriDia False)  posHorizontales validPos
-    print horizontalesAConsiderar
-
+    let posHorizontales = (map (posiblesHorizontales False board)  validPos)
+    let horizontalesAConsiderar = zipWith (contarFichasConsecutivasYEspacios)  posHorizontales validPos
     let horizontalesConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar validPos posHorizontales
-    print horizontalesConPotencial
-
-    -- let consecHorizontales = consecutivosHorizontales False posHorizontales validPos
-
-    -- print horizontalesConPotencial
 
     let posDiagonales1 = posiblesDiagonales board validPos False
     let diag1 = map fst posDiagonales1
     let positions1 = map snd posDiagonales1
-
-    let diagonales1AConsiderar = zipWith (numeroXsoZeroHoriDia False)  diag1 positions1
-
+    let diagonales1AConsiderar = zipWith (contarFichasConsecutivasYEspacios)  diag1 positions1
     let diagonales1ConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar positions1 diag1
 
-    -- let consecDiagonales1 = (consecutivosHorizontales False diag1 positions1)
 
     let posDiagonales2 = posiblesDiagonales board validPos True
     let diag2 = map fst posDiagonales2
     let positions2 = map snd posDiagonales2
-
-    let diagonales2AConsiderar = zipWith (numeroXsoZeroHoriDia False)  diag2 positions2
-
+    let diagonales2AConsiderar = zipWith (contarFichasConsecutivasYEspacios)  diag2 positions2
     let diagonales2ConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar positions2 diag2
 
-    -- let consecDiagonales2 = (consecutivosHorizontales False diag2 positions2)
 
-    -- print posDiagonales2s)
-    -- print posHorizontales
     let maxGlobal = maximum (verticalesConPotencial ++ horizontalesConPotencial ++ diagonales1ConPotencial ++ diagonales2ConPotencial)
     let consecutivosFiltrado = map (posicionValorEnLista maxGlobal 0) ([verticalesConPotencial] ++ [horizontalesConPotencial] ++ [diagonales1ConPotencial] ++ [diagonales2ConPotencial])
     let mejoresPosiciones = uneListas consecutivosFiltrado
 
-    print "Kappas"
-    print maxGlobal
-    print consecutivosFiltrado
-    print mejoresPosiciones
+
     return ((mejoresPosiciones, maxGlobal))
     
 comprobarWin :: Bool -> [[[Char]]] -> Bool
 -- Funcion que dado un jugador y un tablero, confirma si el jugador ha ganado en ese tablero
-comprobarWin isPlayer board = checkHorizontal board isPlayer || checkVertical board isPlayer || checkDiagonals board isPlayer
+comprobarWin isPlayer board = checkFilas board isPlayer || checkVertical board isPlayer || checkDiagonals board isPlayer
 
 posDiferencia :: [[Char]] -> [[Char]] -> Int -> Int
 -- Funcion que dada dos listas diferentes, te devuelve en que posicion son diferentes
@@ -621,11 +530,6 @@ posOfTrueArray pos (a:as)
     |a = [pos] ++ posOfTrueArray (pos + 1) as
     |otherwise = posOfTrueArray (pos + 1) as 
 
--- posOfFalse :: [Bool] -> Int -> Int
--- posOfFalse [] pos = pos
--- posOfFalse (f:fs) pos
---     |not f = pos
---     |otherwise = posOfFalse fs (pos+1)
 
 uneListas :: [[Int]] -> [Int]
 -- Funcion que une un conjunto de listas separadas.
@@ -642,31 +546,27 @@ elementosUnicos xs = eliminaRepeticiones $ sort xs
       | x1 == x2  = eliminaRepeticiones (x1:xs)
       | otherwise = x1 : eliminaRepeticiones (x2:xs)
 
-consecutivosHorizontales :: Bool -> [[[Char]]] -> [Int] -> [Int]
-consecutivosHorizontales _ [] _ = []
-consecutivosHorizontales isPlayer (f:fs) (p:ps) = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
-                                        : consecutivosHorizontales isPlayer fs ps
+contarFichasConsecutivosDadaPosicion :: Bool -> [[[Char]]] -> [Int] -> [Int]
+contarFichasConsecutivosDadaPosicion _ [] _ = []
+contarFichasConsecutivosDadaPosicion isPlayer (f:fs) (p:ps) = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
+                                        : contarFichasConsecutivosDadaPosicion isPlayer fs ps
 
 posiblesColumnas :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
 posiblesColumnas _ [] _ = []
-posiblesColumnas board (p:ps) isPlayer = (dropWhile ("_"==) ((map reverse (transpose (ponerFicha isPlayer board p ))) !! p)) : posiblesColumnas board ps isPlayer
-
-posiblesColumnasSinDrop :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
-posiblesColumnasSinDrop _ [] _ = []
-posiblesColumnasSinDrop board (p:ps) isPlayer = (((map reverse (transpose (ponerFicha isPlayer board p ))) !! p)) : posiblesColumnasSinDrop board ps isPlayer
+posiblesColumnas board (p:ps) isPlayer = (((map reverse (transpose (ponerFicha isPlayer board p ))) !! p)) : posiblesColumnas board ps isPlayer
 
 -- posiblesHorizontales :: [[[Char]]] -> [Int] -> Bool -> [[[Char]]]
 -- Dado un board, sus posiciones validas, y un jugador, 
-posiblesHorizontales     _ [] _ = []
-posiblesHorizontales board (p:ps) isPlayer = (cogerUltimaHorizontalConValor p 0 (ponerFicha isPlayer board p )) : posiblesHorizontales board ps isPlayer
+-- posiblesHorizontales _ [] _ = []
+posiblesHorizontales isPlayer board p  = (cogerUltimaHorizontalConValor p (ponerFicha isPlayer board p ))
 
-cogerUltimaHorizontalConValor :: Int -> Int -> [[[Char]]] -> ([[Char]], Int)
--- Funcion que dada una posicion y un tablero, devuelve una pareja: la horizontal no vacia que este mas arriba en el
--- tablero en la posicion dada, y a que altura está.
-cogerUltimaHorizontalConValor _ hori (f:[]) = (f, hori)
-cogerUltimaHorizontalConValor pos hori (f:fs) 
-    |(head fs) !! pos == "_" = (f, hori)
-    |otherwise = cogerUltimaHorizontalConValor pos (hori+1) fs
+-- cogerUltimaHorizontalConValor :: Int -> Int -> [[[Char]]] -> ([[Char]], Int)
+-- Funcion que dada una posicion y un tablero, la horizontal no vacia que este mas arriba en el
+-- tablero en la posicion dada.
+cogerUltimaHorizontalConValor _ (f:[]) = (f)
+cogerUltimaHorizontalConValor pos (f:fs) 
+    |(head fs) !! pos == "_" = (f)
+    |otherwise = cogerUltimaHorizontalConValor pos fs
 
 posicionValorEnLista :: Int -> Int -> [Int] -> [Int]
 -- Dado una lista y un valor, devuelve una nueva lista indicando en que posiciones de la lista anterior
@@ -685,9 +585,6 @@ validPositions' :: [[[Char]]] -> [Int]
 validPositions' board = posOfTrueArray 0 (map (any ("_"==)) board) 
 
 
-
-
-
 diagonals :: [[[Char]]] -> [[[Char]]]
 --Funcion que dada una lista de listas rectangular, devuelve sus diagonales como lista de listas
 diagonals []       = []
@@ -703,15 +600,15 @@ transpose b = (map head b) : transpose (map tail b)
 
 checkDiagonals :: [[[Char]]] -> Bool -> Bool
 -- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna de las diagonales del tablero.
-checkDiagonals board isPlayer = checkHorizontal (diagonals board)  isPlayer || checkHorizontal (diagonals (map reverse board)) isPlayer
+checkDiagonals board isPlayer = checkFilas (diagonals board)  isPlayer || checkFilas (diagonals (map reverse board)) isPlayer
 
 checkVertical :: [[[Char]]] -> Bool -> Bool
 -- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna vertical del tablero.
-checkVertical board isPlayer = checkHorizontal (transpose board) isPlayer
+checkVertical board isPlayer = checkFilas (transpose board) isPlayer
 
-checkHorizontal :: [[[Char]]] -> Bool -> Bool
--- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna horizontal del tablero.
-checkHorizontal board isPlayer = foldl (||) (False) (map (confirmWin isPlayer 0) board)
+checkFilas :: [[[Char]]] -> Bool -> Bool
+-- Funcion que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna fila de las dadas del tablero.
+checkFilas board isPlayer = foldl (||) (False) (map (confirmWin isPlayer 0) board)
 
 confirmWin :: Bool -> Int -> [[Char]] -> Bool
 -- Funcion que dada una lista, y un jugador, indica si el jugador tiene 4 fichas consecutivas en la lista.
