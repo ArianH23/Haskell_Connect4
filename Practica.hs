@@ -13,7 +13,6 @@ randInt low high = do
     let result = low + random `mod` (high - low + 1)
     return result
 
-
 createBoard :: Int -> Int -> [[[Char]]]
 -- Función que devuelve un tablero de n filas y m columnas
 createBoard n m = splitEvery m (take (n * m) rows)
@@ -412,20 +411,20 @@ greedyMejorado board validPos =
     let verticalesConPotencial = zipWith (numeroXsConsecutivas) posToConsider posColumnas
 
     let posHorizontales = (map (posiblesHorizontales False board)  validPos)
-    let horizontalesAConsiderar = zipWith (contarFichasConsecutivasYEspacios)  posHorizontales validPos
+    let horizontalesAConsiderar = zipWith (contarFichasConsecutivasYEspaciosMayorIguala4)  posHorizontales validPos
     let horizontalesConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar validPos posHorizontales
 
     let posDiagonales1 = posiblesDiagonales board validPos False
     let diag1 = map fst posDiagonales1
     let positions1 = map snd posDiagonales1
-    let diagonales1AConsiderar = zipWith (contarFichasConsecutivasYEspacios)  diag1 positions1
+    let diagonales1AConsiderar = zipWith (contarFichasConsecutivasYEspaciosMayorIguala4)  diag1 positions1
     let diagonales1ConPotencial = zipWith3 (contarFichasGreedyM False) diagonales1AConsiderar positions1 diag1
 
 
     let posDiagonales2 = posiblesDiagonales board validPos True
     let diag2 = map fst posDiagonales2
     let positions2 = map snd posDiagonales2
-    let diagonales2AConsiderar = zipWith (contarFichasConsecutivasYEspacios)  diag2 positions2
+    let diagonales2AConsiderar = zipWith (contarFichasConsecutivasYEspaciosMayorIguala4)  diag2 positions2
     let diagonales2ConPotencial = zipWith3 (contarFichasGreedyM False) diagonales2AConsiderar positions2 diag2
 
 
@@ -491,11 +490,16 @@ numeroXsConsecutivas b f
     |b = length (takeWhile ("X"==) (dropWhile ("_"==) f))
     |otherwise = 0
 
-contarFichasConsecutivasYEspacios :: [[Char]] -> Int -> Bool
+contarFichasConsecutivasYEspaciosMayorIguala4 :: [[Char]] -> Int -> Bool
 -- Función que dada una lista y una posición de la lista, determina si desde esa posición, contando hacia adelante y hacia atras
 -- de la lista, hay mas de 4 "X" o "_" consecutivamente
-contarFichasConsecutivasYEspacios f p = (length (takeWhile (crossOrEmpty) (drop (p) f)) + length (takeWhile (crossOrEmpty) (drop ((length f) - p) (reverse f)) ))>=4
-                   
+contarFichasConsecutivasYEspaciosMayorIguala4 f p = (length (takeWhile (crossOrEmpty) (drop (p) f)) + length (takeWhile (crossOrEmpty) (drop ((length f) - p) (reverse f)) ))>=4
+     
+contarFichasConsecutivasDadaPosicion :: Bool -> [[Char]] -> Int -> Int
+-- Función que dado un jugador, una fila y una posicion
+-- Devuelve la suma de fichas consecutivas del jugador en la posicion indicada de la fila.
+contarFichasConsecutivasDadaPosicion isPlayer f p = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
+
 contarFichasGreedyM :: Bool -> Bool -> Int -> [[Char]] -> Int
 -- Función que dado un jugador, un booleano como indicador, una posicion, y una fila.
 -- Si el indicador es True, se devuelve la suma de fichas consecutivas del jugador en la posicion indicada de la fila.
@@ -504,16 +508,19 @@ contarFichasGreedyM isPlayer b p f
     | b = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
     | otherwise = 0
 
-comprobarWin :: Bool -> [[[Char]]] -> Bool
--- Función que dado un jugador y un tablero, confirma si el jugador ha ganado en ese tablero
-comprobarWin isPlayer board = checkFilas board isPlayer || checkVertical board isPlayer || checkDiagonals board isPlayer
-
 posDiferencia :: [[Char]] -> [[Char]] -> Int -> Int
 -- Función que dada dos listas diferentes, te devuelve en que posicion son diferentes
 posDiferencia (b1:b1s) (b2:b2s) pos
     |b1 /= b2 = pos
     |otherwise = posDiferencia b1s b2s (pos+1)
     
+diagonals :: [[[Char]]] -> [[[Char]]]
+--Función que dada una lista de listas rectangular, devuelve sus diagonales como lista de listas
+diagonals []       = []
+diagonals ([]:xs) = xs
+diagonals x      = zipWith (++) (map ((:[]) . head) x ++ repeat [])
+                                    ([]:(diagonals (map tail x)))
+
 diagonalDiferente :: [[[Char]]] -> [[[Char]]] -> ([[Char]], Int)
 -- Dados 2 boards diferentes, devuelve la diagonal diferente del segundo board, y que posición dentro de esta diagonal es diferente.
 diagonalDiferente board1 board2 = ((diagonals board2) !! x, posDiferencia ((diagonals board1) !! x) ((diagonals board2) !! x) 0)
@@ -529,45 +536,6 @@ posiblesDiagonales _ [] _ = []
 posiblesDiagonales board (p:ps) invertida 
     |not invertida = (diagonalDiferente board (ponerFicha False board p)) : posiblesDiagonales board ps invertida
     |otherwise = (diagonalDiferente (map reverse board) (map reverse (ponerFicha False board p))) : posiblesDiagonales board ps invertida
-
-posOfFalseArray :: Int -> [Bool] -> [Int]
--- Dada una lista de booleanos y un numero que indica la posicion en esta lista, deuelve una nueva lista que contiene
--- las posiciones de aquellos valores a False en la lista dada inicialmente
-posOfFalseArray pos [] = []
-posOfFalseArray pos (a:as)
-    |not a = [pos] ++ posOfFalseArray (pos + 1) as
-    |otherwise = posOfFalseArray (pos + 1) as
-
-posOfTrueArray :: Int -> [Bool] -> [Int]
--- Dada una lista de booleanos y un numero que indica la posicion en esta lista, deuelve una nueva lista que contiene
--- las posiciones de aquellos valores a True en la lista dada inicialmente
-posOfTrueArray _ [] = []
-posOfTrueArray pos (a:as)
-    |a = [pos] ++ posOfTrueArray (pos + 1) as
-    |otherwise = posOfTrueArray (pos + 1) as 
-
-
-uneListas :: [[Int]] -> [Int]
--- Función que une un conjunto de listas separadas.
-uneListas (x:[]) = x
-uneListas (x:xs) = x ++ uneListas xs
-
-elementosUnicos :: [Int] -> [Int]
--- Función que ordena una lista y devuelve los mismos elementos sin repeticiones.
-elementosUnicos xs = eliminaRepeticiones $ sort xs
-  where
-    --Funcion que elimina repeticiones consecutivas
-    eliminaRepeticiones []  = []
-    eliminaRepeticiones [x] = [x]
-    eliminaRepeticiones (x1:x2:xs)
-      | x1 == x2  = eliminaRepeticiones (x1:xs)
-      | otherwise = x1 : eliminaRepeticiones (x2:xs)
-
-
-contarFichasConsecutivasDadaPosicion :: Bool -> [[Char]] -> Int -> Int
--- Función que dado un jugador, una fila y una posicion
--- Devuelve la suma de fichas consecutivas del jugador en la posicion indicada de la fila.
-contarFichasConsecutivasDadaPosicion isPlayer f p = contarFichasConsecutivas 0 isPlayer (drop (p) f) + contarFichasConsecutivas 0 isPlayer (drop ((length f) - p) (reverse f))
 
 posiblesColumnas :: Bool -> [[[Char]]] -> Int -> [[Char]]
 -- Funcion que dado un jugador, el board, y una posición, devuelve la columna que se vería afectada
@@ -587,6 +555,39 @@ cogerUltimaHorizontalConValor pos (f:fs)
     |(head fs) !! pos == "_" = (f)
     |otherwise = cogerUltimaHorizontalConValor pos fs
 
+posOfFalseArray :: Int -> [Bool] -> [Int]
+-- Dada una lista de booleanos y un numero que indica la posicion en esta lista, deuelve una nueva lista que contiene
+-- las posiciones de aquellos valores a False en la lista dada inicialmente
+posOfFalseArray pos [] = []
+posOfFalseArray pos (a:as)
+    |not a = [pos] ++ posOfFalseArray (pos + 1) as
+    |otherwise = posOfFalseArray (pos + 1) as
+
+posOfTrueArray :: Int -> [Bool] -> [Int]
+-- Dada una lista de booleanos y un numero que indica la posicion en esta lista, deuelve una nueva lista que contiene
+-- las posiciones de aquellos valores a True en la lista dada inicialmente
+posOfTrueArray _ [] = []
+posOfTrueArray pos (a:as)
+    |a = [pos] ++ posOfTrueArray (pos + 1) as
+    |otherwise = posOfTrueArray (pos + 1) as 
+
+uneListas :: [[Int]] -> [Int]
+-- Función que une un conjunto de listas separadas.
+uneListas (x:[]) = x
+uneListas (x:xs) = x ++ uneListas xs
+
+elementosUnicos :: [Int] -> [Int]
+-- Función que ordena una lista y devuelve los mismos elementos sin repeticiones.
+elementosUnicos xs = eliminaRepeticiones $ sort xs
+  where
+    --Funcion que elimina repeticiones consecutivas
+    eliminaRepeticiones []  = []
+    eliminaRepeticiones [x] = [x]
+    eliminaRepeticiones (x1:x2:xs)
+      | x1 == x2  = eliminaRepeticiones (x1:xs)
+      | otherwise = x1 : eliminaRepeticiones (x2:xs)
+
+
 posicionValorEnLista :: Int -> Int -> [Int] -> [Int]
 -- Dado una lista y un valor, devuelve una nueva lista indicando en que posiciones de la lista anterior
 -- se encuentra dicho valor.
@@ -603,19 +604,14 @@ validPositions' :: [[[Char]]] -> [Int]
 -- Función auxiliar de validPositions que ayuda a conseguir las posiciones validas
 validPositions' board = posOfTrueArray 0 (map (any ("_"==)) board) 
 
-
-diagonals :: [[[Char]]] -> [[[Char]]]
---Función que dada una lista de listas rectangular, devuelve sus diagonales como lista de listas
-diagonals []       = []
-diagonals ([]:xs) = xs
-diagonals x      = zipWith (++) (map ((:[]) . head) x ++ repeat [])
-                                    ([]:(diagonals (map tail x)))
-
-
 transpose :: [[[Char]]] -> [[[Char]]]
 --Función que dada una lista de listas rectangular, devuelve su transpuesta
 transpose ([]:_) = []
 transpose b = (map head b) : transpose (map tail b)
+
+comprobarWin :: Bool -> [[[Char]]] -> Bool
+-- Función que dado un jugador y un tablero, confirma si el jugador ha ganado en ese tablero
+comprobarWin isPlayer board = checkFilas board isPlayer || checkVertical board isPlayer || checkDiagonals board isPlayer
 
 checkDiagonals :: [[[Char]]] -> Bool -> Bool
 -- Función que dado un tablero y un jugador, confirma si el jugador ha ganado por alguna de las diagonales del tablero.
@@ -646,7 +642,6 @@ confirmWin isPlayer fichasSeguidas (f:fs)
             confirmWin isPlayer (fichasSeguidas+1) fs
         else
             confirmWin isPlayer 0 fs
-
 
 sort :: [Int] -> [Int]
 -- Función que ordena una lista de enteros de menor a mayor.
