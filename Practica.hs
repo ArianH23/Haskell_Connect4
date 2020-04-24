@@ -419,14 +419,14 @@ greedyMejorado board validPos =
     let diag1 = map fst posDiagonales1
     let positions1 = map snd posDiagonales1
     let diagonales1AConsiderar = zipWith (contarFichasConsecutivasYEspacios)  diag1 positions1
-    let diagonales1ConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar positions1 diag1
+    let diagonales1ConPotencial = zipWith3 (contarFichasGreedyM False) diagonales1AConsiderar positions1 diag1
 
 
     let posDiagonales2 = posiblesDiagonales board validPos True
     let diag2 = map fst posDiagonales2
     let positions2 = map snd posDiagonales2
     let diagonales2AConsiderar = zipWith (contarFichasConsecutivasYEspacios)  diag2 positions2
-    let diagonales2ConPotencial = zipWith3 (contarFichasGreedyM False) horizontalesAConsiderar positions2 diag2
+    let diagonales2ConPotencial = zipWith3 (contarFichasGreedyM False) diagonales2AConsiderar positions2 diag2
 
 
     let maxGlobal = maximum (verticalesConPotencial ++ horizontalesConPotencial ++ diagonales1ConPotencial ++ diagonales2ConPotencial)
@@ -515,14 +515,14 @@ posDiferencia (b1:b1s) (b2:b2s) pos
     |otherwise = posDiferencia b1s b2s (pos+1)
     
 diagonalDiferente :: [[[Char]]] -> [[[Char]]] -> ([[Char]], Int)
--- Dados 2 boards diferentes, devuelve la diagonal diferente del segundo, y a que altura del tablero se encuentra esta posicion.
+-- Dados 2 boards diferentes, devuelve la diagonal diferente del segundo board, y que posición dentro de esta diagonal es diferente.
 diagonalDiferente board1 board2 = ((diagonals board2) !! x, posDiferencia ((diagonals board1) !! x) ((diagonals board2) !! x) 0)
     where x = ((posOfFalseArray 0 (zipWith (==) (diagonals board1) (diagonals board2))) !! 0)
 
 posiblesDiagonales :: [[[Char]]] -> [Int] -> Bool -> [([[Char]], Int)]
 -- Dado un board, sus posiciones validas, y un booleano que indica si invertir o no el board,
 -- devuelve una lista de parejas, primero de aquellas diagonales que se forman al poner una ficha en
--- el board dado en cada posicion valida, y segundo, la altura a la que esta la nueva ficha colocada.
+-- el board dado en cada posicion valida, y segundo, la posicion en esa diagonal que ha sido afectada.
 -- Si invertida es True, entonces antes de hacer todo lo mencionado anteriormente, se invertirá el tablero 
 -- para trabajar con las diagonales inversas.
 posiblesDiagonales _ [] _ = []

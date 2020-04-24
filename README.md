@@ -118,3 +118,6 @@ El bot smart tiene escondida una estrategia greedy mejorada respecto a la del bo
 * Si existe la posibilidad de que el usuario pueda conseguir un 4 en raya haciendo dos movimientos, el bot hará aquel movimiento que le permita al usuario empezar el 4 en raya.
 * En el caso de que esa posibilidad no exista, llegamos al caso predeterminado en el que el bot hará un movimiento greedy, pero será más inteligente de como lo hacia el bot anterior. El bot ahora tendrá en cuenta que exista la posibilidad de hacer 4 en raya en alguna situación futura del tablero, y le da un valor a ese movimiento correspondiente a la linea mas grande que se pueda hacer. Si no existe la posibilidad de formar una linea de longitud 4 en el futuro, el valor del movimiento greedy, dando igual la longitud de la raya que se pueda hacer, será 0.
 * Por lo general, en todas las condiciones anteriores, el bot intentará siempre hacer el movimiento que sea más centrico en el tablero si se da el caso de que hay varias opciones.
+
+## Autor
+* Rodrigo Arian Huapaya Sierra
