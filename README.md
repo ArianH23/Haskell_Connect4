@@ -1,5 +1,5 @@
 # Cuatro en raya
-Práctica para la asignatura LP de la FIB que sustituye el examen parcial de Haskell en el Q2 2019-2020. [Enunciat de la pràctica. ](https://github.com/jordi-petit/lp-quatre-en-ratlla)
+Práctica de Haskell para la asignatura LP de la FIB que sustituye al examen parcial de Haskell en el Q2 2019-2020. [Enunciat de la pràctica. ](https://github.com/jordi-petit/lp-quatre-en-ratlla)
 
 La practica consiste en implementar el juego de mesa Cuatro en raya junto con 3 bots para el juego. 
 * El primero hace movimientos aleatorios.
@@ -50,21 +50,20 @@ Al iniciar la partida se pediran una serie de parametros.
     ```
 
 ## Como jugar
-En este juego se escoge la columna en la que se quiere poner una ficha, en cuanto se haya escogido, se colocará una ficha en la parte vacía mas inferior de la columna.
-Las columnas estan numeradas desde el 1 hasta `n` siendo `n` el número de columnas de la tabla. Estas serán las posiciones en las que colocar  una ficha.<br><br>
-La partida acabará en cuanto alguno de los 2 jugadores haya formado una linea de longitud 4 o mayor en el tablero. O si el tablero se acaba llenando y ninguno ha hecho un 4 en raya, es decir, hay un empate. <br><br>
-Cada vez que sea el turno del usuario para poner ficha, se mostrará el mensaje:
+El juego consiste en escoger la columna en la que se quiere poner una ficha, esta se colocará en la parte vacía mas inferior de la columna. La partida acabará en cuanto alguno de los 2 jugadores haya formado una linea de longitud 4 o mayor en el tablero, ya sea en diagonal, horizontal o vertical. O si el tablero se acaba llenando de fichas y ninguno ha hecho un 4 en raya, es decir, hay un empate. <br> 
+El usuario siempre usará "O" como ficha y el bot "X". Las columnas estan numeradas desde el 1 hasta `n` siendo `n` el número de columnas de la tabla (esta es la forma de numerar las columna escogida porque es más fácil en general para un usuario entender que la primera columna es la 1 y no la 0).<br>
+Cada vez que sea el turno del usuario para poner ficha, se mostrará un mensaje como el siguiente:
 
 ```
->Elige en que columna quieres poner la ficha entre la 1 y la `n`
+>Elige en que columna quieres poner la ficha entre la 1 y la 7
 1
 ```
-En este momento el usuario ha de poner un número válido de columna donde colocar la ficha, en el caso de que no sea válido, se mostrará el mensaje
+En este momento el usuario ha de poner un número válido de columna donde colocar la ficha, en el caso de que no sea válido, ya sea porque el número de columna no existe, o porque la columna esta llena, se mostrará el mensaje
 ```
 >La posicion x es inválida
 ```
 Donde `x` será el número introducido por el usuario.
-Y se volverá a pedir que se introduzca un número de columna válido.<br>
+Se mostrará el tablero de nuevo y se volverá a pedir que se introduzca un número de columna válido.<br>
 Despues de que el usuario haya colocado una ficha se mostrará el nuevo estado del tablero junto con una flecha indicando a que tablero corresponde el movimiento para evitar confusiones.
 
 ```
@@ -96,13 +95,13 @@ Y si el bot ha hecho un movimiento:
 
 ## Los bots
 ### Random
-El primer bot es bastante sencillo de explicar, coloca fichas aleatoriamente sobre posiciones validas del tablero.
+El primer bot coloca fichas aleatoriamente sobre posiciones validas del tablero.
 ### Greedy
-El bot tirará fichas en aquellas posiciones que le permita hacer la raya mas grande posible, en caso de empate, tirará de forma aleatoria sobre una de las columnas.   Si ademas se da el caso de que una de estas posiciones puede evitar que el usuario haga un 4 en raya, entonces el bot tirará alli. El bot no intentará bloquear un 4 en raya del usuario si eso no le permite hacer la linea mas grande posible. (es como comprendí el enunciado)
+El bot tirará fichas en aquellas posiciones que le permita hacer la raya mas grande posible, en caso de empate, tirará de forma aleatoria sobre una de las columnas.   Si ademas se da el caso de que una de estas posiciones puede evitar que el usuario haga un 4 en raya, entonces el bot tirará alli. El bot no intentará bloquear un 4 en raya del usuario si eso no le permite hacer la linea mas grande posible. (es como se comprendía en el enunciado)
 ### Smart
 El bot smart tiene escondida una estrategia greedy mejorada respecto a la del bot anterior. Sus prioridades son:
 * Si el bot puede ganar con algún movimiento válido haciendo un 4 en raya, hará ese movimiento.
-* Si el usuario puede ganar con algun movimiento válido, el bot intentará bloquear ese movimiento.
+* Si el usuario puede ganar con algun movimiento, el bot bloqueará ese movimiento si es posible.
 
 * Si se da la situación en la que hay una columna en la que si el usuario pone una ficha, y si seguidamente el bot pusiera una ficha sobre esa misma columna pudiese darle la victoria, el bot evitará poner una ficha en la columna. El bot hará lo mismo si se da el caso de que el usuario puede ganar poniendo una ficha en una columna si el bot pone antes coloca una ficha en esa columna. <br><br>
    A continuación se muestran los ejemplos mencionados, en ambos casos, el bot evitará poner una ficha en la columna 4 durante el resto de la partida a no ser que el usuario ponga una ficha alli antes.
